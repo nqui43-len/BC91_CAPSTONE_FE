@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from "react";
 import { courseService } from "../services/courseService";
 import { Course } from "../types/Course";
+import Link from "next/link";
 
 export default function CourseList() {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -58,10 +59,14 @@ export default function CourseList() {
                 }}
                 dangerouslySetInnerHTML={{ __html: course.moTa }}
               />
-
-              <button className="btn btn-outline-warning mt-auto fw-bold text-dark w-100">
-                Đăng ký ngay
-              </button>
+              <Link
+                href={`/chitiet/${course.maKhoaHoc}`}
+                className="w-100 mt-auto"
+              >
+                <button className="btn btn-outline-warning mt-auto fw-bold text-dark w-100">
+                  Đăng ký ngay
+                </button>
+              </Link>
             </div>
           </div>
         </div>

@@ -46,24 +46,36 @@ export default function Home() {
            LỚP 1: VIDEO NỀN (Nằm dưới cùng - Z-index: -2)
            Thầy dùng absolute để dán nó che kín toàn bộ khung
            --------------------------------------------------------- */}
-        <video
-          autoPlay /* Tự động chạy */
-          loop /* Chạy lặp lại liên tục */
-          muted /* BẮT BUỘC tắt tiếng thì trình duyệt mới cho autoplay */
-          playsInline /* Giúp chạy tốt trên cả điện thoại */
-          className="w-100 h-100"
+        <div
+          suppressHydrationWarning
           style={{
             position: "absolute",
             top: 0,
             left: 0,
-            objectFit: "cover" /* Giúp video không bị bóp méo hình */,
-            zIndex: -2 /* Đẩy xuống tầng thấp nhất */,
+            width: "100%",
+            height: "100%",
+            zIndex: -2,
           }}
         >
-          {/* Đường dẫn tới file video em đã gửi */}
-          <source src="/2759482-uhd_3840_2160_30fps.mp4" type="video/mp4" />
-          Trình duyệt của bạn không hỗ trợ video nền.
-        </video>
+          <video
+            autoPlay /* Tự động chạy */
+            loop /* Chạy lặp lại liên tục */
+            muted /* BẮT BUỘC tắt tiếng thì trình duyệt mới cho autoplay */
+            playsInline /* Giúp chạy tốt trên cả điện thoại */
+            className="w-100 h-100"
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              objectFit: "cover" /* Giúp video không bị bóp méo hình */,
+              zIndex: -2 /* Đẩy xuống tầng thấp nhất */,
+            }}
+          >
+            {/* Đường dẫn tới file video em đã gửi */}
+            <source src="/2759482-uhd_3840_2160_30fps.mp4" type="video/mp4" />
+            Trình duyệt của bạn không hỗ trợ video nền.
+          </video>
+        </div>
 
         {/* ---------------------------------------------------------
            LỚP 2: LỚP KÍNH ĐEN MỜ (Overlay - Z-index: -1)

@@ -1,5 +1,6 @@
-// Nằm ở file src/components/Footer.tsx
+"use client";
 import React from "react";
+import ReCAPTCHA from "react-google-recaptcha";
 
 export default function Footer() {
   return (
@@ -64,18 +65,13 @@ export default function Footer() {
                 placeholder="Điện thoại liên hệ *"
               />
 
-              <p className="mt-3 mb-1 small fw-bold">Nhắn vào ô bên dưới</p>
+              <p className="mt-3 mb-1 small fw-bold">Nhấn vào ô bên dưới</p>
               {/* Fake khung reCAPTCHA */}
-              <div
-                className="bg-light text-dark p-2 mb-3 d-flex align-items-center border"
-                style={{ width: "fit-content" }}
-              >
-                <input
-                  type="checkbox"
-                  className="me-2"
-                  style={{ width: "20px", height: "20px" }}
+              <div className="mb-3">
+                <ReCAPTCHA
+                  sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Đây là chìa khóa dùng thử (Test Key) vĩnh viễn của Google
+                  onChange={(value) => console.log("Đã xác minh!", value)} // Khi tick xanh xong nó sẽ báo ở đây
                 />
-                <span className="fw-bold">I'm not a robot</span>
               </div>
 
               <button className="btn btn-warning fw-bold text-dark rounded-0">
