@@ -19,5 +19,14 @@ export const courseService = {
     } catch (error) {
       console.log('Lỗi lấy khóa học:', error);
     }
-  }
+  },
+  getCourseDetail: async (maKhoaHoc: string) => {
+    try {
+      // Gọi API số 1.1 theo đặc tả của giảng viên
+      const response = await api.get(`/QuanLyKhoaHoc/LayThongTinKhoaHoc?maKhoaHoc=${maKhoaHoc}`);
+      return response.data;
+    } catch (error) {
+      console.log('Lỗi lấy chi tiết khóa học:', error);
+    }
+  },
 };
