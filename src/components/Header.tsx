@@ -23,7 +23,15 @@ export default function Header() {
   }, []); // Dấu [] ở cuối nghĩa là chỉ chạy 1 lần duy nhất khi mở trang
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <nav
+      className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm py-3"
+      style={{
+        backgroundColor: "rgba(255, 255, 255, 0.35)" /* Trắng hơi trong suốt */,
+        backdropFilter: "blur(10px)" /* Làm nhòe phần phía sau tấm kính */,
+        WebkitBackdropFilter:
+          "blur(10px)" /* Hỗ trợ thêm cho trình duyệt Safari của Apple */,
+      }}
+    >
       <div className="container">
         {/* Logo */}
         <Link className="navbar-brand font-weight-bold" href="/">

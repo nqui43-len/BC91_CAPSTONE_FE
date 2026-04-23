@@ -1,10 +1,11 @@
-// Nằm ở file src/app/chitiet/[makhoahoc]/page.tsx
-"use client"; // Bắt buộc vì có dùng hooks (useEffect, useParams)
+"use client";
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "next/navigation"; // Công cụ đọc địa chỉ URL
+import { useParams } from "next/navigation";
+import Link from "next/link"; // THÊM CÔNG CỤ CHUYỂN TRANG
 import { courseService } from "../../../services/courseService";
-import { Course } from "../../../types/Course";
+import { Course } from "../../../types/Course"; // THÊM ĐỊNH NGHĨA KIỂU DỮ LIỆU CHO KHÓA HỌC
+import CourseList from "../../../components/CourseList"; // THÊM CÁI ĐĨA ĐỰNG KHÓA HỌC HÔM TRƯỚC
 
 export default function CourseDetail() {
   const params = useParams();
@@ -12,24 +13,18 @@ export default function CourseDetail() {
 
   const [course, setCourse] = useState<Course | null>(null);
 
-  // Vừa mở trang là gọi API lấy dữ liệu ngay
   useEffect(() => {
     const fetchDetail = async () => {
       if (makhoahoc) {
-        // Ép kiểu makhoahoc thành string để TypeScript không phàn nàn
-        const data = await courseService.getCourseDetail(makhoahoc as string);
-
-        // Nhớ cấu trúc "content" của Swagger nhà em không? Nó nằm ở đây:
+        const data = await courseService.getCourseDetail(makhoahoc);
         if (data && data.content) {
           setCourse(data.content);
         }
       }
     };
-
     fetchDetail();
   }, [makhoahoc]);
 
-  // Trong lúc chờ API trả dữ liệu về (khoảng 0.5s), mình hiện chữ Đang tải...
   if (!course) {
     return (
       <div
@@ -42,58 +37,137 @@ export default function CourseDetail() {
     );
   }
 
-  // Khi có dữ liệu rồi thì "lên mâm" thôi!
   return (
-    <main style={{ minHeight: "80vh" }}>
-      {/* KHỐI 1: BANNER TÊN KHÓA HỌC */}
-      <section className="bg-dark text-light py-5 border-bottom border-warning border-3">
+    <main className="bg-light" style={{ minHeight: "80vh" }}>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        .btn-register-pulse { animation: pulse-warning 2s infinite; transition: all 0.3s ease; }
+        .btn-register-pulse:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(234, 179, 8, 0.4); }
+        @keyframes pulse-warning {
+          0% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.7); }
+          70% { box-shadow: 0 0 0 15px rgba(234, 179, 8, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); }
+        }
+        .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+      `,
+        }}
+      />
+
+      {/* KHỐI 1: BANNER HERO */}
+      <section
+        className="text-light py-5"
+        style={{
+          backgroundImage: `linear-gradient(to right, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.7)), url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          borderBottom: "3px solid #eab308",
+        }}
+      >
         <div className="container py-4">
+          {/* SỬA LỖI 2: Thêm nút Quay lại trang chủ */}
+          <Link
+            href="/"
+            className="text-warning text-decoration-none mb-4 d-inline-block fw-bold fs-6"
+          >
+            <i className="fa-solid fa-arrow-left me-2"></i> Quay lại trang chủ
+          </Link>
+
           <div className="row align-items-center">
-            {/* Cột trái: Thông tin */}
-            <div className="col-md-7">
-              <h1 className="text-warning fw-bold text-uppercase display-5 mb-3">
+            <div className="col-lg-7 mb-4 mb-lg-0">
+              <div className="mb-3">
+                <span className="badge bg-warning text-dark me-2 py-2 px-3 fw-bold">
+                  🔥 Thực chiến
+                </span>
+                <span className="badge border border-warning text-warning py-2 px-3">
+                  Cấp chứng chỉ
+                </span>
+              </div>
+              <h1
+                className="fw-bold text-uppercase display-5 mb-4"
+                style={{
+                  color: "#eab308",
+                  textShadow: "0 0 15px rgba(234,179,8,0.3)",
+                }}
+              >
                 {course.tenKhoaHoc}
               </h1>
-              <p className="fs-5 text-light">
-                <i className="fa-solid fa-star text-warning me-1"></i>
-                <i className="fa-solid fa-star text-warning me-1"></i>
-                <i className="fa-solid fa-star text-warning me-1"></i>
-                <i className="fa-solid fa-star text-warning me-1"></i>
-                <i className="fa-solid fa-star text-warning me-1"></i>
-                <span className="ms-2">({course.luotXem} lượt xem)</span>
-              </p>
-              <button className="btn btn-warning btn-lg fw-bold mt-4 px-5">
-                ĐĂNG KÝ NGAY
+              <div className="d-flex align-items-center mb-4 text-light">
+                <div className="text-warning me-3 fs-5">
+                  <i className="fa-solid fa-star"></i>
+                  <i className="fa-solid fa-star"></i>
+                  <i className="fa-solid fa-star"></i>
+                  <i className="fa-solid fa-star"></i>
+                  <i className="fa-solid fa-star"></i>
+                </div>
+                <span className="fs-5 border-start border-secondary ps-3">
+                  <i className="fa-solid fa-eye me-2 text-warning"></i>
+                  <span className="fw-bold text-white">
+                    {course.luotXem}
+                  </span>{" "}
+                  học viên đã tham gia
+                </span>
+              </div>
+              <button className="btn btn-warning btn-lg fw-bold px-5 py-3 rounded-pill btn-register-pulse text-dark">
+                ĐĂNG KÝ HỌC NGAY
               </button>
             </div>
-
-            {/* Cột phải: Ảnh khóa học */}
-            <div className="col-md-5 text-center mt-4 mt-md-0">
-              <img
-                src={course.hinhAnh}
-                alt={course.tenKhoaHoc}
-                className="img-fluid rounded shadow-lg border border-secondary"
-                style={{ maxHeight: "300px", objectFit: "cover" }}
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src =
-                    "https://placehold.co/600x300/png?text=Course+Image";
-                }}
-              />
+            <div className="col-lg-5 text-center">
+              <div
+                className="glass-card p-2 rounded-4"
+                style={{ display: "inline-block" }}
+              >
+                <img
+                  src={course.hinhAnh}
+                  alt={course.tenKhoaHoc}
+                  className="img-fluid rounded-4 shadow-lg"
+                  style={{
+                    maxHeight: "350px",
+                    objectFit: "cover",
+                    border: "2px solid rgba(234, 179, 8, 0.3)",
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src =
+                      "https://placehold.co/600x400/1e293b/eab308?text=Course+Image";
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* KHỐI 2: MÔ TẢ KHÓA HỌC */}
-      <section className="container mt-5 mb-5 pb-5">
-        <h3 className="fw-bold border-bottom pb-2 mb-4">Giới thiệu khóa học</h3>
+      <section className="container mt-5 mb-5">
+        <div className="row justify-content-center">
+          <div className="col-lg-10">
+            <div className="card border-0 shadow-sm rounded-4">
+              <div className="card-body p-5">
+                <h3 className="fw-bold mb-4 d-flex align-items-center border-bottom pb-3">
+                  <i className="fa-solid fa-book-open text-warning me-3 fs-2"></i>
+                  Thông tin khóa học
+                </h3>
 
-        {/* Lại dùng "ma thuật" dịch thẻ HTML như hôm trước */}
-        <div
-          className="fs-6 text-secondary lh-lg"
-          dangerouslySetInnerHTML={{ __html: course.moTa }}
-        />
+                {/* SỬA LỖI 1: Đã xóa phần text tĩnh thừa thãi, chỉ dịch thẻ HTML của API */}
+                <div
+                  className="fs-6 text-dark lh-lg"
+                  dangerouslySetInnerHTML={{ __html: course.moTa }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SỬA LỖI 3: KHÓA HỌC LIÊN QUAN (Tái sử dụng Component) */}
+      <section className="container mb-5 pb-5">
+        <h3 className="fw-bold mb-4 border-bottom pb-2">
+          Các khóa học khác bạn có thể thích
+        </h3>
+
+        {/* Chỉ cần 1 dòng code này là chúng ta gọi lại toàn bộ 8 khóa học và giao diện thẻ hôm trước! */}
+        <CourseList />
       </section>
     </main>
   );

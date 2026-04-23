@@ -35,7 +35,7 @@ export default function RootLayout({
         <Header />
         
         {/* Phần children này chính là nội dung thay đổi của từng trang */}
-        <main className="min-h-full">
+        <main className="min-h-full" style={{ paddingTop: '100px' }}>
           {children}
         </main>
         <Footer />
