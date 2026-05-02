@@ -3,10 +3,27 @@ import React, { useEffect, useState } from "react";
 import { courseService } from "../services/courseService";
 import { Category } from "../types/Course";
 import Link from "next/link";
+import { useRouter } from "next/dist/client/components/navigation";
 
 export default function Header() {
   // Tạo 1 cái 'giỏ' rỗng để đựng danh mục
   const [categories, setCategories] = useState<Category[]>([]);
+  // 1. Tạo bộ nhớ lưu từ khóa (mặc định là rỗng)
+  const [keyword, setKeyword] = useState('');
+  
+  // 2. Gọi người lái xe ra chờ sẵn
+  const router = useRouter();
+
+  // 3. Hàm xử lý khi người dùng bấm nút Kính lúp hoặc gõ Enter
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault(); // Phép thuật chặn trình duyệt tự động F5 lại trang khi submit form
+    
+    // Nếu người dùng có gõ chữ (không phải toàn dấu cách) thì mới cho xe chạy
+    if (keyword.trim() !== '') {
+      // Bảo người lái xe chở sang trang timkiem, mang theo hành lý là từ khóa
+      router.push(`/timkiem?tuKhoa=${keyword}`);
+    }
+  };
 
   // Vừa load component là chạy đi lấy data ngay
   useEffect(() => {
@@ -82,16 +99,18 @@ export default function Header() {
               </ul>
             </li>
           </ul>
-          <form className="input-group mx-auto" style={{ width: "40%" }}>
+          <form className="input-group mx-auto" style={{ width: "40%" }} onSubmit={handleSearch}>
             <input
               className="form-control border-end-0"
               type="search"
               placeholder="Tìm khóa học..."
+              aria-label="Search"
+              // Ràng buộc giá trị ô input vào "bộ nhớ"
+              value={keyword} 
+              // Mỗi khi gõ 1 chữ, cập nhật chữ đó vào "bộ nhớ"
+              onChange={(e) => setKeyword(e.target.value)} 
             />
-            <button
-              className="btn border border-start-0 bg-white"
-              type="submit"
-            >
+            <button className="btn border border-start-0 bg-whit" type="submit">
               <i className="fa-solid fa-magnifying-glass text-muted"></i>
             </button>
           </form>
