@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap/dist/css/bootstrap.min.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import StoreProvider from "../redux/StoreProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,17 +29,24 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-        {/* 3. Đặt Header ở đây, nó sẽ luôn nằm trên cùng của mọi trang */}
-        <Header />
-        
-        {/* Phần children này chính là nội dung thay đổi của từng trang */}
-        <main className="min-h-full" style={{ paddingTop: '100px' }}>
-          {children}
-        </main>
-        <Footer />
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      >
+        <StoreProvider>
+          {/* 3. Đặt Header ở đây, nó sẽ luôn nằm trên cùng của mọi trang */}
+          <Header />
+
+          {/* Phần children này chính là nội dung thay đổi của từng trang */}
+          <main className="min-h-full" style={{ paddingTop: "100px" }}>
+            {children}
+          </main>
+          <Footer />
+        </StoreProvider>
       </body>
     </html>
   );
