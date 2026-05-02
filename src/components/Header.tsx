@@ -152,7 +152,7 @@ export default function Header() {
             {/* 4. Ma thuật thay đổi giao diện ở đây */}
             {isLoggedIn ? (
               // NẾU ĐÃ ĐĂNG NHẬP: Hiện tên và nút Đăng xuất
-              <div className="d-flex align-items-center gap-3">
+              <div className="d-flex align-items-center gap-3" onClick={()=> router.push('/thongtin')} style={{cursor: 'pointer'}}>
                 {/* 2. Render ra giao diện (Thầy dùng Bootstrap để vo tròn và căn giữa)*/}
                 {/* Khối Avatar tròn */}
                 <div
