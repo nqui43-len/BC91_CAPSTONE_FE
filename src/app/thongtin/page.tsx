@@ -3,44 +3,40 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
-import { AppDispatch, RootState } from "@/src/redux/store"; // Nhớ check lại đường dẫn file store
-import { userService } from "@/src/services/userService";
+import { AppDispatch, RootState } from "@/src/redux/store";
 import { fetchProfile } from "@/src/redux/userSlice";
 import Cookies from "js-cookie";
 
-export default async function ProfilePage() {
+export default function ProfilePage() {
   // 1. Lấy thông tin từ Ngân hàng (Redux)
   const { userInfo, isLoggedIn } = useSelector(
     (state: RootState) => state.user,
   );
   const router = useRouter();
-  const thongTin = await userService.getProfile();
-  console.log(thongTin.email); // TypeScript gật gù đồng ý, IDE popup gợi ý chữ "email" ngay lập tức!
   const dispatch = useDispatch<AppDispatch>();
 
   // 2. CHỐT BẢO VỆ: Kích hoạt ngay khi vị khách bước vào phòng
   useEffect(() => {
-    // Anh bảo vệ nay tự soi trực tiếp vào Két sắt
-    const token = Cookies.get('accessToken');
+    const token = Cookies.get("accessToken");
 
     if (!token) {
-      // Mất Token thật thì mới đuổi đi
-      router.push('/dangnhap');
+      router.push("/dangnhap");
     } else {
-      // Có Token nhưng chưa có thông tin thì đi lấy
       if (!userInfo) {
         dispatch(fetchProfile());
       }
     }
-    // -------------------------------------------------------------
-  }, [isLoggedIn, router, dispatch]); // Theo dõi sự thay đổi của 2 biến này
+  }, [router, dispatch, userInfo]);
 
-  // 3. Tránh hiện giao diện "nháy" lên 1 giây trước khi bị đuổi ra ngoài
+  // 3. Tránh hiện giao diện "nháy" lên 1 giây trước khi xác thực
   if (!isLoggedIn) {
-    return null; // Tạm thời nhắm mắt lại, không vẽ gì cả
+    return null;
   }
 
-  // 4. Nếu đã vượt qua chốt bảo vệ, cho phép xem phòng VIP
+  // 4. KIỂM TRA PHÂN QUYỀN: Có phải tài khoản Giáo vụ/Admin không?
+  // (CyberSoft quy định: "GV" là Giáo vụ, "HV" là Học viên)
+  const isAdmin = userInfo?.maLoaiNguoiDung === "GV";
+
   return (
     <main
       className="bg-light"
@@ -50,28 +46,24 @@ export default async function ProfilePage() {
         <h2 className="fw-bold mb-4 border-start border-warning border-4 ps-3">
           Thông tin cá nhân
         </h2>
-        {/* BẮT ĐẦU BỐ CỤC 2 CỘT */}
         <div className="row">
           {/* ---------------------------------------------------
-              CỘT TRÁI (col-md-4): THẺ CĂN CƯỚC
+              CỘT TRÁI: THẺ CĂN CƯỚC
               --------------------------------------------------- */}
           <div className="col-md-4 mb-4">
             <div className="card shadow-sm border-0 rounded-4 text-center p-4 h-100">
-              {/* Thầy tặng em cái khối Avatar to bự */}
               <div
                 className="rounded-circle bg-warning text-dark mx-auto d-flex justify-content-center align-items-center fw-bold mb-3 shadow"
                 style={{ width: "100px", height: "100px", fontSize: "2.5rem" }}
               >
-                {/* BÀI TẬP: Tái sử dụng logic lấy chữ cái đầu tiên của em vào đây */}
                 {userInfo?.taiKhoan
                   ? userInfo.taiKhoan.charAt(0).toUpperCase()
                   : "U"}
               </div>
 
-              {/* BÀI TẬP: Hiển thị Tài khoản và Họ tên */}
               <h4 className="fw-bold text-dark">{userInfo?.taiKhoan}</h4>
-              <p className="text-muted mb-4">
-                {userInfo?.hoTen || "Chưa cập nhật"}
+              <p className="text-sm bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 d-inline-block px-3 py-1 rounded-pill fw-bold mb-4 small">
+                {isAdmin ? "🚀 Giáo Vụ Tối Cao" : "🎓 Học Viên"}
               </p>
 
               <button className="btn btn-outline-warning fw-bold w-100 rounded-pill">
@@ -82,7 +74,7 @@ export default async function ProfilePage() {
           </div>
 
           {/* ---------------------------------------------------
-              CỘT PHẢI (col-md-8): CHI TIẾT & TÀI SẢN
+              CỘT PHẢI: CHI TIẾT & TÀI SẢN (PHÂN QUYỀN UI TẠI ĐÂY)
               --------------------------------------------------- */}
           <div className="col-md-8">
             <div className="card shadow-sm border-0 rounded-4 p-4 h-100">
@@ -93,33 +85,136 @@ export default async function ProfilePage() {
               <div className="row mb-4">
                 <div className="col-sm-6 mb-3">
                   <p className="text-muted mb-1 small">Email</p>
-                  {/* Nếu userInfo.email có thì hiện, chưa load kịp thì hiện icon xoay tròn hoặc rỗng */}
                   <strong className="text-dark">
-                    {userInfo?.email || "Đang tải..."}
+                    {userInfo?.email || "Chưa cập nhật"}
                   </strong>
                 </div>
                 <div className="col-sm-6 mb-3">
                   <p className="text-muted mb-1 small">Số điện thoại</p>
                   <strong className="text-dark">
-                    {userInfo?.soDT || "Đang tải..."}
+                    {userInfo?.soDT || "Chưa cập nhật"}
                   </strong>
                 </div>
                 <div className="col-sm-6 mb-3">
                   <p className="text-muted mb-1 small">Mã nhóm</p>
                   <strong className="text-dark">
-                    {userInfo?.maNhom || "Đang tải..."}
+                    {userInfo?.maNhom || "Chưa cập nhật"}
                   </strong>
                 </div>
               </div>
 
-              <h5 className="fw-bold mb-3 border-bottom pb-2 mt-4">
-                Khóa học của tôi
-              </h5>
-              <div className="alert alert-info rounded-3">
-                <i className="fa-solid fa-clock-rotate-left me-2"></i>
-                Khu vực này chúng ta sẽ gọi anh bồi bàn (API) để lấy danh sách
-                khóa học ở bước sau nhé!
-              </div>
+              {/* ---------------------------------------------------
+                  NẾU LÀ ADMIN/GIÁO VỤ: HIỂN THỊ BẢNG ĐIỀU KHIỂN QUẢN TRỊ
+                  --------------------------------------------------- */}
+              {isAdmin ? (
+                <>
+                  <h5 className="fw-bold mb-3 border-bottom pb-2 mt-4 text-primary">
+                    <i className="fa-solid fa-toolbox me-2"></i> Bảng điều khiển
+                    Giáo vụ
+                  </h5>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <div className="card h-100 border border-primary border-opacity-25 text-start shadow-sm rounded-3 bg-white">
+                        <div className="card-body d-flex flex-column">
+                          <h6 className="fw-bold text-dark mb-2">
+                            <i className="fa-solid fa-book-open text-primary me-2"></i>
+                            Quản lý Khóa học
+                          </h6>
+                          <p className="text-muted small mb-3">
+                            Quyền hạn: Thêm khóa học mới, chỉnh sửa nội dung,
+                            xóa khóa học hoặc phê duyệt học viên đăng ký.
+                          </p>
+                          <div className="mt-auto">
+                            <button
+                              onClick={() =>
+                                alert(
+                                  "Hệ thống: Chuyển hướng sang trang quản trị khóa học...",
+                                )
+                              }
+                              className="btn btn-primary btn-sm fw-bold w-100 rounded-2"
+                            >
+                              Truy cập hệ thống{" "}
+                              <i className="fa-solid fa-arrow-right ms-1"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6">
+                      <div className="card h-100 border border-success border-opacity-25 text-start shadow-sm rounded-3 bg-white">
+                        <div className="card-body d-flex flex-column">
+                          <h6 className="fw-bold text-dark mb-2">
+                            <i className="fa-solid fa-users text-success me-2"></i>
+                            Quản lý Người dùng
+                          </h6>
+                          <p className="text-muted small mb-3">
+                            Quyền hạn: Quản lý danh sách học viên, phân quyền
+                            tài khoản, cấp khóa học và xử lý khiếu nại.
+                          </p>
+                          <div className="mt-auto">
+                            <button
+                              onClick={() =>
+                                alert(
+                                  "Hệ thống: Chuyển hướng sang trang quản trị người dùng...",
+                                )
+                              }
+                              className="btn btn-success btn-sm fw-bold w-100 rounded-2"
+                            >
+                              Truy cập hệ thống{" "}
+                              <i className="fa-solid fa-arrow-right ms-1"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* ---------------------------------------------------
+                    NẾU LÀ HỌC VIÊN: HIỂN THỊ DANH SÁCH KHÓA HỌC ĐÃ MUA
+                    --------------------------------------------------- */
+                <>
+                  <h5 className="fw-bold mb-3 border-bottom pb-2 mt-4">
+                    Khóa học của tôi
+                  </h5>
+                  <div className="row g-3">
+                    {userInfo?.chiTietKhoaHocGhiDanh &&
+                    userInfo.chiTietKhoaHocGhiDanh.length > 0 ? (
+                      userInfo.chiTietKhoaHocGhiDanh.map(
+                        (khoaHoc: any, index: number) => (
+                          <div className="col-md-6" key={index}>
+                            <div className="card h-100 border text-start shadow-sm rounded-3">
+                              <div className="card-body d-flex flex-column">
+                                <h6 className="fw-bold text-dark mb-2">
+                                  {khoaHoc.tenKhoaHoc}
+                                </h6>
+                                <p className="text-muted small mb-3">
+                                  Mã KH: {khoaHoc.maKhoaHoc}
+                                </p>
+                                <div className="mt-auto">
+                                  <span className="badge bg-success bg-opacity-10 text-success border border-success">
+                                    <i className="fa-solid fa-check-circle me-1"></i>{" "}
+                                    Đã ghi danh
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ),
+                      )
+                    ) : (
+                      <div className="col-12">
+                        <div className="alert alert-warning rounded-3 border-0">
+                          <i className="fa-solid fa-face-frown me-2"></i>
+                          Bạn chưa đăng ký khóa học nào! Hãy ra trang chủ và
+                          chọn cho mình một khóa học nhé.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -8,6 +8,7 @@ export interface UserProfile {
   soDT: string;
   maNhom: string;
   maLoaiNguoiDung: string;
+  chiTietKhoaHocGhiDanh: any[]; // Tạm thời để any[], sau này có thể định nghĩa chi tiết hơn nếu cần
 }
 
 // (Tùy chọn) Nếu Backend CyberSoft có bọc một lớp bên ngoài, ta tạo một Generic Type
