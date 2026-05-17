@@ -64,7 +64,8 @@ export default function CourseDetailPage() {
       dispatch(fetchProfile());
     } catch (error: any) {
       // Ép kiểu Object thành dạng chữ để đọc được lỗi thật sự từ Server
-      const errorMsg = typeof error === 'string' ? error : JSON.stringify(error);
+      const errorMsg =
+        typeof error === "string" ? error : JSON.stringify(error);
       alert("❌ Lỗi ghi danh: " + errorMsg);
     } finally {
       setIsEnrolling(false);
@@ -301,10 +302,10 @@ export default function CourseDetailPage() {
               style={{ top: "110px", zIndex: 5 }}
             >
               <img
-                src="https://demo2.cybersoft.edu.vn/static/media/instrustor10.89946c43.jpg"
+                src="/logo.png"
                 className="card-img-top rounded-top-4"
                 alt="Front-End Course"
-                style={{ height: "230px", objectFit: "cover" }}
+                style={{ height: "150px", objectFit: "fill" }}
               />
               <div className="card-body p-4 text-start">
                 <h3
