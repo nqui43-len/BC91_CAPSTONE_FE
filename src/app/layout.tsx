@@ -5,6 +5,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import StoreProvider from "../redux/StoreProvider";
+import ScrollToTop from "@/src/components/ScrollToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,7 @@ export default function RootLayout({
           </main>
           <Footer />
         </StoreProvider>
+        <ScrollToTop />
       </body>
     </html>
   );

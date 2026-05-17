@@ -1,48 +1,97 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { courseService } from "@/src/services/courseService";
-import CourseCard from "@/src/components/CourseCard"; // Tái sử dụng thẻ khóa học của em
+import CourseCard from "@/src/components/CourseCard";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "@/src/redux/store";
+import { fetchProfile } from "@/src/redux/userSlice";
 
 export default function CourseDetailPage() {
+  const { userInfo, isLoggedIn } = useSelector(
+    (state: RootState) => state.user,
+  );
+  const dispatch = useDispatch<AppDispatch>();
+
   const [relatedCourses, setRelatedCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEnrolling, setIsEnrolling] = useState(false);
+
+  // State cho Popup thu thập thông tin khách vãng lai
+  const [showLeadModal, setShowLeadModal] = useState(false);
+  const [leadForm, setLeadForm] = useState({ hoTen: "", soDT: "" });
+  // Lấy mã khóa học động từ thanh URL
+  const params = useParams();
+  const currentCourseCode = params?.makhoahoc as string;
 
   useEffect(() => {
     const fetchRelated = async () => {
       try {
-        // Gọi API lấy danh sách khóa học thực tế để đổ vào phần "Khóa học tham khảo" bên dưới
         const allCoursesData = await courseService.getCourseList();
         const allCourses = allCoursesData?.content || allCoursesData || [];
-
-        // Lấy đại diện 4 khóa học đầu tiên để làm danh sách gợi ý bán chéo (Cross-selling)
         setRelatedCourses(allCourses.slice(0, 4));
       } catch (error) {
-        console.log("Lỗi tải khóa học tham khảo:", error);
+        console.log("Lỗi tải khóa học:", error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchRelated();
   }, []);
 
+  const daGhiDanh = userInfo?.chiTietKhoaHocGhiDanh?.some(
+    (course: any) => course.maKhoaHoc === currentCourseCode,
+  );
+
+  // XỬ LÝ KHI BẤM NÚT ĐĂNG KÝ
+  const handleEnrollClick = async () => {
+    if (!isLoggedIn) {
+      // NẾU CHƯA ĐĂNG NHẬP: Bật Popup xin thông tin tư vấn
+      setShowLeadModal(true);
+      return;
+    }
+
+    // NẾU ĐÃ ĐĂNG NHẬP: Gọi API ghi danh trực tiếp
+    if (!userInfo?.taiKhoan) return;
+    setIsEnrolling(true);
+    try {
+      await courseService.dangKyKhoaHoc({
+        maKhoaHoc: currentCourseCode,
+        taiKhoan: userInfo.taiKhoan,
+      });
+      alert("🎉 Đăng ký khóa học thành công! Chúc bạn học tốt.");
+      dispatch(fetchProfile());
+    } catch (error: any) {
+      // Ép kiểu Object thành dạng chữ để đọc được lỗi thật sự từ Server
+      const errorMsg = typeof error === 'string' ? error : JSON.stringify(error);
+      alert("❌ Lỗi ghi danh: " + errorMsg);
+    } finally {
+      setIsEnrolling(false);
+    }
+  };
+
+  // XỬ LÝ GỬI FORM TƯ VẤN (KHÁCH VÃNG LAI)
+  const handleSubmitLead = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert(
+      `Cảm ơn bạn ${leadForm.hoTen}! Giáo vụ CyberSoft sẽ liên hệ với bạn qua số điện thoại ${leadForm.soDT} trong thời gian sớm nhất để hỗ trợ ghi danh.`,
+    );
+    setShowLeadModal(false);
+    setLeadForm({ hoTen: "", soDT: "" });
+  };
+
   if (loading) {
     return (
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "80vh" }}
-      >
-        <div className="spinner-border text-warning" role="status"></div>
+      <div className="text-center mt-5 pt-5">
+        <div className="spinner-border text-warning"></div>
       </div>
     );
   }
 
   return (
     <main className="bg-white pb-5" style={{ minHeight: "100vh" }}>
-      {/* -----------------------------------------------------------------
-          1. BANNER VÀNG RỰC RỠ TRẢI DÀI (FLUID)
-          ----------------------------------------------------------------- */}
+      {/* 1. BANNER VÀNG */}
       <div className="bg-warning py-4 text-start">
         <div className="container">
           <h3
@@ -59,11 +108,8 @@ export default function CourseDetailPage() {
 
       <div className="container mt-5">
         <div className="row">
-          {/* -----------------------------------------------------------------
-              2. CỘT TRÁI (NỘI DUNG CHÍNH CHI TIẾT KHÓA HỌC - 8 CỘT)
-              ----------------------------------------------------------------- */}
+          {/* 2. CỘT TRÁI (NỘI DUNG CHÍNH) */}
           <div className="col-lg-8 pe-lg-5 text-start">
-            {/* Tên Khóa Học Siêu Cấp */}
             <h2
               className="fw-extrabold text-dark mb-4 text-uppercase tracking-tight"
               style={{ fontSize: "2.2rem" }}
@@ -71,7 +117,7 @@ export default function CourseDetailPage() {
               LẬP TRÌNH FRONT-END CHUYÊN NGHIỆP
             </h2>
 
-            {/* Khối Thông số Giảng viên / Lĩnh vực / Đánh giá */}
+            {/* Thông số Giảng viên */}
             <div className="row mb-4 align-items-center bg-light p-3 rounded-3 g-3">
               <div className="col-md-4 d-flex align-items-center">
                 <img
@@ -85,7 +131,6 @@ export default function CourseDetailPage() {
                   <p className="mb-0 fw-bold text-dark">Robert Ngô Ngọc</p>
                 </div>
               </div>
-
               <div className="col-md-4 d-flex align-items-center">
                 <div
                   className="rounded-circle bg-success bg-opacity-10 text-success p-2 me-3 d-flex align-items-center justify-content-center"
@@ -98,7 +143,6 @@ export default function CourseDetailPage() {
                   <p className="mb-0 fw-bold text-dark">Thiết kế Web</p>
                 </div>
               </div>
-
               <div className="col-md-4 text-md-end">
                 <div className="text-warning fs-6 mb-1">
                   <i className="fa-solid fa-star me-1"></i>
@@ -112,7 +156,7 @@ export default function CourseDetailPage() {
               </div>
             </div>
 
-            {/* Mô tả dài hoành tráng */}
+            {/* Mô tả chi tiết */}
             <div
               className="text-dark lh-lg mb-5 text-justify fs-6"
               style={{ textAlign: "justify" }}
@@ -125,26 +169,19 @@ export default function CourseDetailPage() {
               khái niệm nâng cao. Bạn sẽ nhận được tất cả lý thuyết, hướng dẫn
               ví dụ và bài thực hành, bài tập tập cũng như vô số kiến thức quan
               trọng bị hầu hết các nguồn khác bỏ qua - sau cùng, có một lý do
-              tại sao khóa học này lại rất lớn! Và trong trường hợp bạn thậm chí
-              không biết tại sao bạn lại muốn học React và bạn chỉ ở đây vì một
-              số quảng cáo hoặc "thuật toán" - đừng lo lắng: ReactJS là một công
-              nghệ quan trọng với tư cách là một nhà phát triển web và trong
-              khóa học này, tôi sẽ cũng giải thích TẠI SAO điều đó lại quan
-              trọng!
+              tại sao khóa học này lại rất lớn!
             </div>
 
-            {/* Khối: Những gì bạn sẽ học */}
+            {/* Những gì bạn sẽ học */}
             <div className="card border-0 bg-light p-4 rounded-4 mb-5 shadow-sm">
               <h4 className="fw-bold text-dark mb-4">Những gì bạn sẽ học</h4>
               <div className="row g-3">
                 {[
                   "Xây dựng các ứng dụng web mạnh mẽ, nhanh chóng, thân thiện với người dùng và phản ứng nhanh",
                   "Thông thạo chuỗi công cụ hỗ trợ React, bao gồm NPM, Webpack, Babel và ES6 / ES2015",
-                  "Đăng ký công việc được trả lương cao hoặc làm freelancer trong một trong những lĩnh vực được yêu cầu nhiều nhất mà bạn có thể tìm thấy trong web dev ngày nay",
+                  "Đăng ký công việc được trả lương cao hoặc làm freelancer trong một trong những lĩnh vực được yêu cầu nhiều nhất",
                   "Nhận ra sức mạnh của việc xây dựng các thành phần có thể tái kết hợp",
                   "Cung cấp trải nghiệm người dùng tuyệt vời bằng cách tận dụng sức mạnh của JavaScript một cách dễ dàng",
-                  "Hãy là kỹ sư giải thích cách hoạt động của Redux cho mọi người, bởi vì bạn biết rất rõ các nguyên tắc cơ bản",
-                  "Tìm hiểu tất cả về React Hooks và React Components",
                   "Nắm vững các khái niệm cơ bản đằng sau việc cấu trúc các ứng dụng Redux",
                 ].map((item, index) => (
                   <div
@@ -158,7 +195,7 @@ export default function CourseDetailPage() {
               </div>
             </div>
 
-            {/* Khối: Nội dung khóa học (Syllabus Accordion) */}
+            {/* Nội dung khóa học (Accordion) */}
             <h4 className="fw-bold text-dark mb-4 text-uppercase">
               Nội dung khóa học
             </h4>
@@ -166,7 +203,6 @@ export default function CourseDetailPage() {
               className="accordion border shadow-sm rounded-3 mb-5"
               id="courseAccordion"
             >
-              {/* MỤC 1 */}
               <div className="accordion-item border-0 border-bottom">
                 <h2 className="accordion-header" id="headingOne">
                   <button
@@ -193,10 +229,9 @@ export default function CourseDetailPage() {
                         "Các khái niệm về React Component",
                         "Thiết lập môi trường cho Windows",
                         "Tạo ứng dụng React - React-Scripts",
-                        "Ghi chú nhanh về dấu ngoặc kép cho string interpolation",
                       ].map((lesson, idx) => (
                         <li
-                          className="list-group-item d-flex justify-content-between align-items-center py-3 px-4 border-light bg-hover-light"
+                          className="list-group-item d-flex justify-content-between align-items-center py-3 px-4 border-light"
                           key={idx}
                         >
                           <span className="text-dark fw-medium">
@@ -213,8 +248,7 @@ export default function CourseDetailPage() {
                 </div>
               </div>
 
-              {/* MỤC 2 */}
-              <div className="accordion-item border-0 border-bottom">
+              <div className="accordion-item border-0">
                 <h2 className="accordion-header" id="headingTwo">
                   <button
                     className="accordion-button collapsed fw-bold bg-light text-dark py-3"
@@ -238,54 +272,7 @@ export default function CourseDetailPage() {
                       {[
                         "Trang chủ và thành phần thư mục",
                         "Hướng dẫn khóa học + Liên kết Github",
-                        "Trang chủ thương mại điện tử + thiết lập SASS",
                         "Tệp CSS và SCSS",
-                        "React 17: Cập nhật các gói + Phiên bản React mới nhất",
-                      ].map((lesson, idx) => (
-                        <li
-                          className="list-group-item d-flex justify-content-between align-items-center py-3 px-4"
-                          key={idx}
-                        >
-                          <span className="text-dark fw-medium">
-                            <i className="fa-regular fa-circle-play text-success me-3 fs-5"></i>
-                            {lesson}
-                          </span>
-                          <span className="text-muted small">
-                            <i className="fa-regular fa-clock me-1"></i> 14:35
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* MỤC 3 */}
-              <div className="accordion-item border-0">
-                <h2 className="accordion-header" id="headingThree">
-                  <button
-                    className="accordion-button collapsed fw-bold bg-light text-dark py-3"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#collapseThree"
-                  >
-                    MỤC 3: KIẾN THỨC CHUYÊN SÂU{" "}
-                    <span className="badge bg-success bg-opacity-10 text-success ms-3 border border-success border-opacity-25 small fw-normal">
-                      XEM TRƯỚC
-                    </span>
-                  </button>
-                </h2>
-                <div
-                  id="collapseThree"
-                  className="accordion-collapse collapse"
-                  data-bs-parent="#courseAccordion"
-                >
-                  <div className="accordion-body p-0">
-                    <ul className="list-group list-group-flush">
-                      {[
-                        "connect() và mapStateToProps",
-                        "Trạng thái thư mục vào Redux",
-                        "Thành phần Tổng quan về Bộ sưu tập",
                       ].map((lesson, idx) => (
                         <li
                           className="list-group-item d-flex justify-content-between align-items-center py-3 px-4"
@@ -307,9 +294,7 @@ export default function CourseDetailPage() {
             </div>
           </div>
 
-          {/* -----------------------------------------------------------------
-              3. CỘT PHẢI (SIDEBAR ĐĂNG KÝ HÌNH ẢNH + GIÁ TIỀN - STICKY 4 CỘT)
-              ----------------------------------------------------------------- */}
+          {/* 3. CỘT PHẢI (SIDEBAR ĐĂNG KÝ) */}
           <div className="col-lg-4">
             <div
               className="card shadow-lg border-0 rounded-4 sticky-top"
@@ -322,7 +307,6 @@ export default function CourseDetailPage() {
                 style={{ height: "230px", objectFit: "cover" }}
               />
               <div className="card-body p-4 text-start">
-                {/* Giá tiền sét đánh cực bốc */}
                 <h3
                   className="fw-extrabold text-end mb-4 text-dark d-flex align-items-center justify-content-end"
                   style={{ fontSize: "1.8rem" }}
@@ -331,20 +315,29 @@ export default function CourseDetailPage() {
                   500.000<sup>đ</sup>
                 </h3>
 
-                {/* Nút Đăng ký màu xanh lá chuẩn mẫu */}
-                <button
-                  className="btn btn-outline-success btn-lg fw-bold w-100 py-2.5 mb-4 rounded-3 text-uppercase"
-                  style={{ letterSpacing: "0.5px", borderWidth: "2px" }}
-                  onClick={() =>
-                    alert(
-                      "Chức năng ghi danh khóa học sẽ được chúng ta xử lý hoàn chỉnh ở bài học tiếp theo!",
-                    )
-                  }
-                >
-                  ĐĂNG KÝ
-                </button>
+                {/* NÚT ĐĂNG KÝ THÔNG MINH */}
+                {daGhiDanh ? (
+                  <button className="btn btn-secondary btn-lg fw-bold w-100 py-2.5 mb-4 rounded-3 text-uppercase disabled">
+                    <i className="fa-solid fa-check-circle me-2"></i>ĐÃ GHI DANH
+                  </button>
+                ) : (
+                  <button
+                    className="btn btn-outline-success btn-lg fw-bold w-100 py-2.5 mb-4 rounded-3 text-uppercase"
+                    onClick={handleEnrollClick}
+                    disabled={isEnrolling}
+                    style={{ borderWidth: "2px", letterSpacing: "0.5px" }}
+                  >
+                    {isEnrolling ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2"></span>{" "}
+                        Đang xử lý...
+                      </>
+                    ) : (
+                      "ĐĂNG KÝ"
+                    )}
+                  </button>
+                )}
 
-                {/* Danh sách thông số có kèm icon màu vàng */}
                 <ul className="list-group list-group-flush text-muted small">
                   <li className="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-light">
                     <span className="text-dark fw-medium">
@@ -366,57 +359,96 @@ export default function CourseDetailPage() {
                     </span>
                     <i className="fa-solid fa-book text-warning fs-5"></i>
                   </li>
-                  <li className="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-light">
-                    <span className="text-dark fw-medium">
-                      Video: <strong className="text-dark ms-1">14</strong>
-                    </span>
-                    <i className="fa-solid fa-photo-film text-warning fs-5"></i>
-                  </li>
-                  <li className="list-group-item d-flex justify-content-between align-items-center px-0 py-3 border-0">
-                    <span className="text-dark fw-medium">
-                      Trình độ:{" "}
-                      <strong className="text-dark ms-1">
-                        Người mới bắt đầu
-                      </strong>
-                    </span>
-                    <i className="fa-solid fa-database text-warning fs-5"></i>
-                  </li>
                 </ul>
-
-                <div className="mt-4">
-                  <input
-                    type="text"
-                    className="form-control py-2 text-center rounded-2 bg-light border-0"
-                    placeholder="Nhập mã khuyến mãi..."
-                    style={{ fontSize: "0.9rem" }}
-                  />
-                </div>
               </div>
             </div>
           </div>
-          {/* End Sidebar */}
         </div>
       </div>
 
-      {/* -----------------------------------------------------------------
-          4. KHỐI KHÓA HỌC THAM KHẢO (ĐỔ DỮ LIỆU ĐỘNG TỪ API BÊN DƯỚI)
-          ----------------------------------------------------------------- */}
+      {/* 4. KHÓA HỌC THAM KHẢO */}
       <div className="container mt-5 pt-5 border-top text-start">
-        <h4
-          className="fw-bold text-dark mb-4 border-start border-warning border-4 ps-3 text-uppercase"
-          style={{ letterSpacing: "0.5px" }}
-        >
+        <h4 className="fw-bold text-dark mb-4 border-start border-warning border-4 ps-3 text-uppercase">
           Khóa học tham khảo
         </h4>
         <div className="row g-4">
           {relatedCourses.map((relatedCourse, index) => (
             <div className="col-md-3" key={index}>
-              {/* Ráp ống kính tái sử dụng khuôn CourseCard cực đẹp của em */}
               <CourseCard course={relatedCourse} />
             </div>
           ))}
         </div>
       </div>
+
+      {/* =========================================================
+          MODAL: THU THẬP THÔNG TIN KHÁCH VÃNG LAI (LEADS FORM)
+          ========================================================= */}
+      {showLeadModal && (
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.6)", zIndex: 1050 }}
+        >
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content rounded-4 border-0 shadow-lg">
+              <div className="modal-header border-bottom-0 pb-0">
+                <h5 className="modal-title fw-bold text-success">
+                  Đăng ký tư vấn khóa học
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowLeadModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body p-4 text-start">
+                <p className="text-muted small mb-4">
+                  Bạn chưa có tài khoản trên hệ thống. Vui lòng để lại thông
+                  tin, Giáo vụ của chúng tôi sẽ liên hệ để tư vấn và tạo tài
+                  khoản cho bạn!
+                </p>
+                <form onSubmit={handleSubmitLead}>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold text-dark small">
+                      Họ và tên *
+                    </label>
+                    <input
+                      type="text"
+                      className="form-control bg-light"
+                      placeholder="Nhập họ tên của bạn"
+                      value={leadForm.hoTen}
+                      onChange={(e) =>
+                        setLeadForm({ ...leadForm, hoTen: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="form-label fw-bold text-dark small">
+                      Số điện thoại *
+                    </label>
+                    <input
+                      type="tel"
+                      className="form-control bg-light"
+                      placeholder="Nhập số điện thoại liên hệ"
+                      value={leadForm.soDT}
+                      onChange={(e) =>
+                        setLeadForm({ ...leadForm, soDT: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn btn-success fw-bold w-100 py-2 rounded-3"
+                  >
+                    Gửi yêu cầu tư vấn
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
