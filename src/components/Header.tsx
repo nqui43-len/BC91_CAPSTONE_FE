@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { courseService } from "../services/courseService";
 import { Category } from "../types/Course";
 import Link from "next/link";
-import { useRouter } from "next/dist/client/components/navigation";
+import { useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/src/redux/store";
 import { fetchProfile, logout } from "@/src/redux/userSlice";
@@ -19,7 +19,7 @@ export default function Header() {
   );
   const dispatch = useDispatch<AppDispatch>();
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (keyword.trim() !== "") {
       router.push(`/timkiem?tuKhoa=${keyword}`);
@@ -30,13 +30,12 @@ export default function Header() {
     dispatch(logout());
     Cookies.remove("accessToken");
     router.push("/");
-    alert("Đã đăng xuất thành công!");
   };
 
   const tenHienThi = userInfo?.taiKhoan || userInfo?.hoTen || "Bạn";
   const chuCaiDau = tenHienThi.charAt(0).toUpperCase();
 
-  // KHỐI 1: BÙA PHỤC HỒI TRÍ NHỚ REDUX (Giữ nguyên)
+  // --- CƠ CHẾ ĐỒNG BỘ TRẠNG THÁI (Global State Hydration) ---
   useEffect(() => {
     const token = Cookies.get("accessToken");
     if (token && !userInfo) {
@@ -44,26 +43,17 @@ export default function Header() {
     }
   }, [dispatch, userInfo]);
 
-  // -------------------------------------------------------------
-  // KHỐI 2: KÍCH HOẠT BOOTSTRAP JS & LẤY DANH MỤC KHÓA HỌC
-  // -------------------------------------------------------------
+  // --- CƠ CHẾ TẢI DỮ LIỆU BAN ĐẦU (Initial Fetching & Dynamic Import) ---
   useEffect(() => {
-    // 1. KÍCH HOẠT HIỆU ỨNG ĐỘNG (Dropdown, Modal) CỦA BOOTSTRAP TRÊN TRÌNH DUYỆT
     import("bootstrap/dist/js/bootstrap.bundle.min.js" as any);
 
     const fetchCategories = async () => {
       try {
         const data = await courseService.getCategoryList();
-
-        // Dòng này giúp em kiểm tra xem API trả về hình dáng như thế nào ở tab Console F12
-        console.log("Dữ liệu danh mục nhận được từ API:", data);
-
-        // Bóc hộp an toàn theo cấu trúc API CyberSoft
         const categoryArray = data?.content || data || [];
-
         setCategories(categoryArray);
       } catch (error) {
-        console.log("Lỗi tải danh mục:", error);
+        console.error("Lỗi tải danh mục hệ thống:", error);
       }
     };
 
@@ -91,7 +81,6 @@ export default function Header() {
           />
         </Link>
 
-        {/* Nút hiện menu trên mobile */}
         <button
           className="navbar-toggler"
           type="button"
@@ -103,7 +92,6 @@ export default function Header() {
 
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav me-auto">
-            {/* Dropdown Danh Mục Khóa Học */}
             <li className="nav-item dropdown">
               <a
                 className="nav-link dropdown-toggle fw-bold text-dark"
@@ -162,7 +150,7 @@ export default function Header() {
             </button>
           </form>
 
-          {/* Khu vực Đăng nhập/Đăng xuất */}
+          {/* Khu vực Xác thực: Đăng nhập / Trạng thái User */}
           <div className="d-flex align-items-center ms-3">
             {isLoggedIn ? (
               <div

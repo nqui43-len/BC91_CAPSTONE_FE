@@ -1,4 +1,3 @@
-// Nằm ở file src/components/CourseList.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -11,9 +10,13 @@ export default function CourseList() {
 
   useEffect(() => {
     const fetchCourses = async () => {
-      const data = await courseService.getCourseList();
-      if (data && data.content) {
-        setCourses(data.content.slice(0, 8));
+      try {
+        const data = await courseService.getCourseList();
+        if (data && data.content) {
+          setCourses(data.content.slice(0, 8));
+        }
+      } catch (error) {
+        console.error("Lỗi khi tải danh sách khóa học:", error);
       }
     };
     fetchCourses();

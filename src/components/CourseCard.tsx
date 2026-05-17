@@ -2,15 +2,12 @@ import React from "react";
 import Link from "next/link";
 import { Course } from "../types/Course";
 
-// Đây là định nghĩa "Nhân bánh" (Props).
-// Khuôn này bắt buộc phải được truyền vào một biến tên là 'course' có kiểu dữ liệu là 'Course'.
 interface CourseCardProps {
   course: Course;
 }
 
 export default function CourseCard({ course }: CourseCardProps) {
   return (
-    // Cái khuôn này chứa toàn bộ giao diện, link, và hiệu ứng của 1 thẻ khóa học
     <Link
       href={`/chitiet/${course.maKhoaHoc}`}
       className="text-decoration-none d-block h-100"
@@ -37,6 +34,7 @@ export default function CourseCard({ course }: CourseCardProps) {
 
         <div className="card-body d-flex flex-column">
           <h6 className="card-title fw-bold">{course.tenKhoaHoc}</h6>
+
           <div
             className="card-text text-muted small mb-4"
             style={{
@@ -48,8 +46,8 @@ export default function CourseCard({ course }: CourseCardProps) {
             }}
             dangerouslySetInnerHTML={{ __html: course.moTa }}
           />
+
           <div className="w-100 mt-auto">
-            {/* Đây là cái <button> đã được "ngụy trang" thành <div> */}
             <div className="btn btn-outline-warning w-100 fw-bold text-dark">
               Đăng ký ngay
             </div>

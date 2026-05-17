@@ -1,7 +1,6 @@
 export default function HeroBanner() {
   return (
     <>
-      {/* Ma thuật CSS tạo hiệu ứng nhịp đập Pulse và hover cho nút Play */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -10,7 +9,7 @@ export default function HeroBanner() {
           animation: pulse 2s infinite;
         }
         .play-btn:hover {
-          transform: scale(1.1) rotate(5deg); /* Thêm chút xoay khi hover cho ngầu */
+          transform: scale(1.1) rotate(5deg);
           box-shadow: 0 0 40px #eab308;
           cursor: pointer;
         }
@@ -23,25 +22,19 @@ export default function HeroBanner() {
         }}
       />
 
-      {/* =========================================================
-         1. KHỐI HERO SECTION (Cái khung để dán các lớp giấy)
-         Thầy dùng position: relative và overflow: hidden
-         ========================================================= */}
+      {/* --- HERO SECTION CONTAINER --- */}
       <section
         suppressHydrationWarning
         className="text-white"
         style={{
-          position: "relative" /* Làm cái khung để dán các lớp absolute vào */,
-          minHeight: "80vh" /* Tăng chiều cao lên chút cho hoành tráng */,
+          position: "relative",
+          minHeight: "80vh",
           display: "flex",
           alignItems: "center",
-          overflow: "hidden" /* Giấu video thừa nếu nó to quá */,
+          overflow: "hidden",
         }}
       >
-        {/* ---------------------------------------------------------
-           LỚP 1: VIDEO NỀN (Nằm dưới cùng - Z-index: -2)
-           Thầy dùng absolute để dán nó che kín toàn bộ khung
-           --------------------------------------------------------- */}
+        {/* LỚP 1: BACKGROUND MEDIA LAYER */}
         <div
           suppressHydrationWarning
           style={{
@@ -54,30 +47,26 @@ export default function HeroBanner() {
           }}
         >
           <video
-            suppressHydrationWarning /* Dán thêm bùa vào tận đây */
-            autoPlay /* Tự động chạy */
-            loop /* Chạy lặp lại liên tục */
-            muted /* BẮT BUỘC tắt tiếng thì trình duyệt mới cho autoplay */
-            playsInline /* Giúp chạy tốt trên cả điện thoại */
+            suppressHydrationWarning
+            autoPlay
+            loop
+            muted
+            playsInline
             className="w-100 h-100"
             style={{
               position: "absolute",
               top: 0,
               left: 0,
-              objectFit: "cover" /* Giúp video không bị bóp méo hình */,
-              zIndex: -2 /* Đẩy xuống tầng thấp nhất */,
+              objectFit: "cover",
+              zIndex: -2,
             }}
           >
-            {/* Đường dẫn tới file video em đã gửi */}
             <source src="/2759482-uhd_3840_2160_30fps.mp4" type="video/mp4" />
             Trình duyệt của bạn không hỗ trợ video nền.
           </video>
         </div>
 
-        {/* ---------------------------------------------------------
-           LỚP 2: LỚP KÍNH ĐEN MỜ (Overlay - Z-index: -1)
-           Nằm đè lên video để chữ không bị lóa, dễ đọc hơn
-           --------------------------------------------------------- */}
+        {/* LỚP 2: OVERLAY MASK LAYER */}
         <div
           style={{
             position: "absolute",
@@ -85,18 +74,15 @@ export default function HeroBanner() {
             left: 0,
             width: "100%",
             height: "100%",
-            backgroundColor: "rgba(15, 23, 42, 0.8)" /* Màu đen xanh mờ */,
-            zIndex: -1 /* Nằm trên video, nằm dưới nội dung */,
+            backgroundColor: "rgba(15, 23, 42, 0.8)",
+            zIndex: -1,
           }}
         ></div>
 
-        {/* ---------------------------------------------------------
-           LỚP 3: NỘI DUNG CHÍNH (Nằm trên cùng - Z-index: default)
-           (Giữ nguyên nút Play thở và khối chữ màu vàng)
-           --------------------------------------------------------- */}
+        {/* LỚP 3: MAIN CONTENT LAYER */}
         <div className="container py-5" style={{ position: "relative" }}>
           <div className="row align-items-center">
-            {/* Nửa bên trái: Nút Play năng lượng (Vẫn giữ nguyên) */}
+            {/* Khối Visual Action */}
             <div className="col-md-6 text-center mb-5 mb-md-0">
               <div
                 className="play-btn"
@@ -120,7 +106,7 @@ export default function HeroBanner() {
               </div>
             </div>
 
-            {/* Nửa bên phải: Khối chữ màu vàng (Vẫn giữ nguyên) */}
+            {/* Khối Call To Action - CTA */}
             <div className="col-md-6">
               <h1
                 className="fw-bold display-3 mb-3"

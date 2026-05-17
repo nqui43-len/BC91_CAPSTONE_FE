@@ -1,97 +1,103 @@
 import api from "./apiConfig";
 
-// Hàm lấy danh sách danh mục (API số 2 trong Swagger)
+// --- COURSE MANAGEMENT SERVICES ---
 export const courseService = {
+  // --- 1. DATA FETCHING (Truy xuất dữ liệu công khai) ---
+
   getCategoryList: async () => {
     try {
-      // Dùng axios gọi tới đường dẫn API tương ứng
       const response = await api.get("/QuanLyKhoaHoc/LayDanhMucKhoaHoc");
       return response.data;
     } catch (error) {
-      console.log("Lỗi lấy danh mục:", error);
+      console.error("Lỗi truy xuất danh mục hệ thống:", error);
     }
   },
 
   getCourseList: async () => {
     try {
-      // Đường dẫn này dựa theo Swagger của em
       const response = await api.get("/QuanLyKhoaHoc/LayDanhSachKhoaHoc");
       return response.data;
     } catch (error) {
-      console.log("Lỗi lấy khóa học:", error);
+      console.error("Lỗi truy xuất danh sách khóa học:", error);
     }
   },
 
   getCourseDetail: async (maKhoaHoc: string) => {
     try {
-      // Gọi API số 1.1 theo đặc tả của giảng viên
       const response = await api.get(
         `/QuanLyKhoaHoc/LayThongTinKhoaHoc?maKhoaHoc=${maKhoaHoc}`,
       );
       return response.data;
     } catch (error) {
-      console.log("Lỗi lấy chi tiết khóa học:", error);
+      console.error("Lỗi truy xuất chi tiết khóa học:", error);
     }
   },
 
-  // Lấy danh sách khóa học theo mã danh mục (Ví dụ: FE, BE, Mobile...)
   getCoursesByCategory: async (maDanhMuc: string) => {
     try {
-      // Gọi API yêu cầu backend lọc khóa học
-      // Lưu ý: Tùy vào thiết kế của Swagger nhà em, url có thể thêm params MaNhom, em nhớ kiểm tra nhé.
       const response = await api.get(
         `/QuanLyKhoaHoc/LayKhoaHocTheoDanhMuc?maDanhMuc=${maDanhMuc}&MaNhom=GP01`,
       );
       return response.data;
     } catch (error) {
-      console.log("Lỗi lấy khóa học theo danh mục:", error);
+      console.error("Lỗi lọc khóa học theo phân loại danh mục:", error);
     }
   },
 
-  // Tìm kiếm khóa học theo tên
   searchCourse: async (tuKhoa: string) => {
     try {
-      // API của CyberSoft thường là LayDanhSachKhoaHoc kết hợp tham số tenKhoaHoc
       const response = await api.get(
         `/QuanLyKhoaHoc/LayDanhSachKhoaHoc?tenKhoaHoc=${tuKhoa}&MaNhom=GP01`,
       );
       return response.data;
     } catch (error) {
-      console.log("Lỗi tìm kiếm khóa học:", error);
+      console.error("Lỗi thực thi truy vấn tìm kiếm khóa học:", error);
     }
   },
 
-  // Ghi danh khóa học (Học viên tự đăng ký)
+  // --- 2. ENROLLMENT WORKFLOW (Quy trình ghi danh) ---
+
   ghiDanhKhoaHoc: async (data: { maKhoaHoc: string; taiKhoan: string }) => {
     try {
       const response = await api.post("/QuanLyKhoaHoc/GhiDanhKhoaHoc", data);
       return response.data;
     } catch (error: any) {
-      throw error.response?.data?.content || error.response?.data || "Lỗi ghi danh khóa học";
+      throw (
+        error.response?.data?.content ||
+        error.response?.data ||
+        "Lỗi ghi danh khóa học"
+      );
     }
   },
 
-  // Đăng ký khóa học (Dành cho Học viên tự đăng ký trên web)
   dangKyKhoaHoc: async (data: { maKhoaHoc: string; taiKhoan: string }) => {
     try {
       const response = await api.post("/QuanLyKhoaHoc/DangKyKhoaHoc", data);
       return response.data;
     } catch (error: any) {
-      throw error.response?.data?.content || error.response?.data || "Lỗi đăng ký khóa học";
+      throw (
+        error.response?.data?.content ||
+        error.response?.data ||
+        "Lỗi đăng ký khóa học"
+      );
     }
   },
 
-  // Hủy ghi danh khóa học
   huyGhiDanh: async (data: { maKhoaHoc: string; taiKhoan: string }) => {
     try {
       const response = await api.post("/QuanLyKhoaHoc/HuyGhiDanh", data);
       return response.data;
     } catch (error: any) {
-      throw error.response?.data?.content || error.response?.data || "Lỗi hủy ghi danh";
+      throw (
+        error.response?.data?.content ||
+        error.response?.data ||
+        "Lỗi hủy ghi danh"
+      );
     }
   },
 
-  // 1. Thêm khóa học mới
+  // --- 3. ADMIN: DATA MUTATION (Thao tác quản trị hệ thống cấp cao) ---
+
   addCourse: async (data: any) => {
     try {
       const response = await api.post("/QuanLyKhoaHoc/ThemKhoaHoc", data);
@@ -100,12 +106,11 @@ export const courseService = {
       throw (
         error.response?.data?.content ||
         error.response?.data ||
-        "Lỗi thêm khóa học"
+        "Lỗi thao tác thêm khóa học"
       );
     }
   },
 
-  // 2. Cập nhật khóa học
   updateCourse: async (data: any) => {
     try {
       const response = await api.put("/QuanLyKhoaHoc/CapNhatKhoaHoc", data);
@@ -114,12 +119,11 @@ export const courseService = {
       throw (
         error.response?.data?.content ||
         error.response?.data ||
-        "Lỗi cập nhật khóa học"
+        "Lỗi cập nhật cấu trúc khóa học"
       );
     }
   },
 
-  // 3. Xóa khóa học
   deleteCourse: async (maKhoaHoc: string) => {
     try {
       const response = await api.delete(
@@ -130,7 +134,7 @@ export const courseService = {
       throw (
         error.response?.data?.content ||
         error.response?.data ||
-        "Lỗi xóa khóa học"
+        "Lỗi thực thi xóa khóa học"
       );
     }
   },

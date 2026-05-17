@@ -1,98 +1,47 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { userService, UserProfile } from "@/src/services/userService"; // Import Service và Type
-import { authService } from "@/src/services/authService"; // Import Service Đăng nhập
+import { userService, UserProfile } from "@/src/services/userService";
+import { authService } from "@/src/services/authService";
 import Cookies from "js-cookie";
 
-// 1. Cập nhật Hợp đồng State
+// --- 1. ĐỊNH NGHĨA GIAO DIỆN TRẠNG THÁI (State Interface) ---
 interface UserState {
-  userInfo: UserProfile | null; // Cập nhật Type ở đây thay vì 'any'
+  userInfo: UserProfile | null;
   isLoggedIn: boolean;
-  loading: boolean; // MỚI: Cờ báo hiệu đang tải
-  error: string | null; // MỚI: Chứa câu thông báo lỗi
+  loading: boolean;
+  error: string | null;
 }
 
+// --- 2. KHỞI TẠO TRẠNG THÁI MẶC ĐỊNH (Initial State) ---
 const initialState: UserState = {
   userInfo: null,
-  isLoggedIn: false, // BẮT BUỘC để false, chúng ta sẽ cho Header tự đi kiểm tra Cookie sau
+  isLoggedIn: false,
   loading: false,
   error: null,
 };
 
-// 3. Khởi tạo Slice (Phòng ban)
-const userSlice = createSlice({
-  name: "user",
-  initialState,
-  reducers: {
-    // Hành động 1: Cập nhật dữ liệu khi Đăng nhập THÀNH CÔNG
-    loginSuccess: (state, action: PayloadAction<any>) => {
-      state.userInfo = action.payload;
-      state.isLoggedIn = true; // Bật cờ đăng nhập lên
-    },
+// --- 3. XỬ LÝ BẤT ĐỒNG BỘ (Async Thunks / Side Effects) ---
 
-    // BÀI TẬP CỦA EM Ở ĐÂY: Hành động 2 - Đăng xuất (logout)
-    logout: (state) => {
-      state.userInfo = null;
-      state.isLoggedIn = false;
-    },
-  },
-  // MỚI: Lắng nghe tiến độ của anh nhân viên fetchProfile
-  extraReducers: (builder) => {
-    builder
-      // Trạng thái 1: Đang xách xe đi lấy dữ liệu
-      .addCase(fetchProfile.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      // Trạng thái 2: Lấy THÀNH CÔNG (payload chính là UserProfile)
-      .addCase(fetchProfile.fulfilled, (state, action) => {
-        state.loading = false;
-        state.userInfo = action.payload; // Đắp dữ liệu mới tinh vào kho
-        state.isLoggedIn = true;
-      })
-      // Trạng thái 3: Bị lỗi hoặc Token hết hạn (payload là cái chuỗi message ở trên)
-      .addCase(fetchProfile.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // KHI ĐĂNG NHẬP THÀNH CÔNG
-      .addCase(loginUser.fulfilled, (state) => {
-        state.loading = false;
-        state.isLoggedIn = true;
-        // KHÔNG CẦN gán state.userInfo ở đây nữa! 
-        // Vì thằng fetchProfile được gọi ké ở trên đã tự động gán hồ sơ chuẩn 100% vào kho rồi!
-      })
-      // KHI ĐĂNG NHẬP THẤT BẠI
-      .addCase(loginUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      });
-  },
-});
-
-// TẠO ASYNC THUNK: Nhân viên chuyên đi lấy Hồ sơ
+// Thunk: Đồng bộ hóa Hồ sơ người dùng từ Backend (Fetch User Profile)
 export const fetchProfile = createAsyncThunk<
-  UserProfile, // Kiểu dữ liệu trả về nếu THÀNH CÔNG
-  void, // Tham số truyền vào khi gọi hàm (ở đây không cần truyền gì nên để void)
-  { rejectValue: string } // Kiểu dữ liệu trả về nếu THẤT BẠI
+  UserProfile,
+  void,
+  { rejectValue: string }
 >("user/fetchProfile", async (_, thunkAPI) => {
   try {
-    // Nhờ chuyên viên Service gọi API (Không cần try catch bên service nữa)
     const data = await userService.getProfile();
-    return data; // Trả về cho Redux cập nhật state
+    return data;
   } catch (error: any) {
-    // GIẢI QUYẾT CÂU HỎI 1 CỦA EM TẠI ĐÂY:
-    // Bóc tách đối tượng AxiosError để lấy đúng câu thông báo của Backend
+    // Trích xuất an toàn thông báo lỗi từ phía Server (Error Payload Extraction)
     const message =
       error.response?.data?.content ||
       error.response?.data?.message ||
       "Lỗi khi lấy thông tin cá nhân";
 
-    // Dùng công cụ của Redux để ném lỗi có kiểm soát
     return thunkAPI.rejectWithValue(message);
   }
 });
 
-// TẠO ASYNC THUNK: Nhân viên chuyên đi Đăng nhập
+// Thunk: Xử lý luồng Đăng nhập và Khởi tạo phiên làm việc (Authentication Flow)
 export const loginUser = createAsyncThunk(
   "user/loginUser",
   async (credentials: any, thunkAPI) => {
@@ -105,12 +54,13 @@ export const loginUser = createAsyncThunk(
       const data = response.data || response;
       const payload = data.content || data;
 
+      // Lưu trữ Token vào Cookie để duy trì phiên làm việc (Session Persistence)
       const token = payload.accessToken;
       if (token) {
         Cookies.set("accessToken", token, { expires: 7 });
       }
 
-      // TUYỆT CHIÊU: Vừa có Token xong, gọi ngay nhân viên fetchProfile đi lấy hồ sơ xịn về!
+      // Kích hoạt Thunk fetchProfile để đồng bộ hóa ngay lập tức dữ liệu hồ sơ chi tiết (Data Hydration)
       await thunkAPI.dispatch(fetchProfile()).unwrap();
 
       return payload;
@@ -118,12 +68,57 @@ export const loginUser = createAsyncThunk(
       const message =
         error.response?.data?.content ||
         error.response?.data?.message ||
-        "Sai thông tin!";
+        "Sai thông tin tài khoản hoặc mật khẩu!";
       return thunkAPI.rejectWithValue(message);
     }
   },
 );
 
-export const { loginSuccess, logout } = userSlice.actions;
+// --- 4. KHỞI TẠO SLICE (Redux Slice Initialization) ---
+const userSlice = createSlice({
+  name: "user",
+  initialState,
+  reducers: {
+    // Synchronous Reducers: Các thao tác thay đổi State đồng bộ cục bộ
+    loginSuccess: (state, action: PayloadAction<any>) => {
+      state.userInfo = action.payload;
+      state.isLoggedIn = true;
+    },
+    logout: (state) => {
+      state.userInfo = null;
+      state.isLoggedIn = false;
+    },
+  },
+  extraReducers: (builder) => {
+    // Asynchronous Lifecycle Handling: Lắng nghe và xử lý các vòng đời của Promise (Pending, Fulfilled, Rejected)
+    builder
+      // Vòng đời của fetchProfile
+      .addCase(fetchProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.userInfo = action.payload;
+        state.isLoggedIn = true;
+      })
+      .addCase(fetchProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Vòng đời của loginUser
+      .addCase(loginUser.fulfilled, (state) => {
+        state.loading = false;
+        state.isLoggedIn = true;
+        // Ghi chú: Không cần cập nhật state.userInfo tại đây do fetchProfile đã đảm nhiệm việc Hydrate dữ liệu
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+  },
+});
 
+// Xuất khẩu Actions và Reducer
+export const { loginSuccess, logout } = userSlice.actions;
 export default userSlice.reducer;

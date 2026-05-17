@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="bg-dark text-light py-5 mt-5 border-top border-warning border-3">
       <div className="container">
         <div className="row">
-          {/* CỘT 1: Thông tin & Đăng ký khuyến mãi */}
+          {/* Khối Thông tin thương hiệu & Đăng ký nhận bản tin (Newsletter Subscription) */}
           <div className="col-md-4 mb-4">
             <h5 className="text-warning fw-bold mb-3">CYBERSOFT</h5>
             <p className="fw-bold">NHẬN TIN SỰ KIỆN & KHUYẾN MÃI</p>
@@ -45,7 +45,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* CỘT 2: Form Đăng ký tư vấn */}
+          {/* Khối Form Tư vấn & Tích hợp xác thực chống Spam (reCAPTCHA Integration) */}
           <div className="col-md-4 mb-4">
             <h5 className="text-warning fw-bold mb-3">ĐĂNG KÍ TƯ VẤN</h5>
             <form>
@@ -66,11 +66,13 @@ export default function Footer() {
               />
 
               <p className="mt-3 mb-1 small fw-bold">Nhấn vào ô bên dưới</p>
-              {/* Fake khung reCAPTCHA */}
+
               <div className="mb-3">
                 <ReCAPTCHA
-                  sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Đây là chìa khóa dùng thử (Test Key) vĩnh viễn của Google
-                  onChange={(value) => console.log("Đã xác minh!", value)} // Khi tick xanh xong nó sẽ báo ở đây
+                  sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                  onChange={(value) =>
+                    console.log("reCAPTCHA Verified:", value)
+                  }
                 />
               </div>
 
@@ -80,10 +82,8 @@ export default function Footer() {
             </form>
           </div>
 
-          {/* CỘT 3: Fanpage & Liên kết */}
           <div className="col-md-4 mb-4">
             <h5 className="text-warning fw-bold mb-3">CYBERSOFT ACADEMY</h5>
-            {/* Ảnh fake Fanpage Facebook */}
             <iframe
               src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Flophocviet&tabs=&width=340&height=130&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
               width="340"
@@ -93,14 +93,11 @@ export default function Footer() {
                 overflow: "hidden",
                 borderRadius: "8px",
               }}
-              scrolling="no"
-              frameBorder="0"
               allowFullScreen={true}
               allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
               className="mb-3 bg-white"
             ></iframe>
 
-            {/* Chia làm 2 cột nhỏ cho các liên kết */}
             <div className="row small text-light">
               <div className="col-6">
                 <ul className="list-unstyled">

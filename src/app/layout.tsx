@@ -4,8 +4,8 @@ import "./globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import StoreProvider from "../redux/StoreProvider";
 import ScrollToTop from "@/src/components/ScrollToTop";
+import StoreProvider from "../redux/StoreProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,8 +18,32 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "E-Learning CyberSoft",
-  description: "Dự án tốt nghiệp Frontend",
+  title: "E-Learning CyberSoft | Dự án Tốt nghiệp",
+  description: "Nền tảng học trực tuyến chất lượng cao - Nơi khởi đầu sự nghiệp lập trình của bạn.",
+  
+  openGraph: {
+    title: "E-Learning CyberSoft | Vươn tầm Lập trình viên",
+    description: "Hơn 1000+ khóa học từ Zero đến Hero. Hệ thống đánh giá, cấp chứng chỉ và kết nối việc làm chuyên nghiệp.",
+    url: "https://bc-91-capstone-fe.vercel.app/",
+    siteName: "E-Learning CyberSoft",
+    images: [
+      {
+        url: "https://bc-91-capstone-fe.vercel.app/logo.png", 
+        width: 1200,
+        height: 630,
+        alt: "Ảnh đại diện E-Learning CyberSoft",
+      },
+    ],
+    locale: "vi_VN",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "E-Learning CyberSoft | Vươn tầm Lập trình viên",
+    description: "Hơn 1000+ khóa học từ Zero đến Hero. Hệ thống đánh giá, cấp chứng chỉ và kết nối việc làm chuyên nghiệp.",
+    images: ["https://bc-91-capstone-fe.vercel.app/logo.png"],
+  },
 };
 
 export default function RootLayout({
@@ -28,7 +52,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    // suppressHydrationWarning: Ngăn chặn cảnh báo lỗi đồng bộ giao diện (Hydration) do các Extension của trình duyệt gây ra
+    <html lang="vi" suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
@@ -39,10 +64,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >
         <StoreProvider>
-          {/* 3. Đặt Header ở đây, nó sẽ luôn nằm trên cùng của mọi trang */}
           <Header />
-
-          {/* Phần children này chính là nội dung thay đổi của từng trang */}
           <main className="min-h-full" style={{ paddingTop: "100px" }}>
             {children}
           </main>

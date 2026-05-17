@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 
+// --- FLOATING ACTION BUTTON (FAB) CỦA HỆ THỐNG ---
 export default function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false);
 
-  // Hàm theo dõi vị trí cuộn chuột của người dùng
   const toggleVisibility = () => {
-    // Nếu cuộn xuống quá 300px thì hiện nút, ngược lại thì ẩn
     if (window.scrollY > 300) {
       setIsVisible(true);
     } else {
@@ -15,7 +14,6 @@ export default function ScrollToTop() {
     }
   };
 
-  // Hàm kích hoạt cuộn mượt mà lên đầu trang
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -24,10 +22,8 @@ export default function ScrollToTop() {
   };
 
   useEffect(() => {
-    // Lắng nghe sự kiện scroll khi Component được render
     window.addEventListener("scroll", toggleVisibility);
 
-    // Dọn dẹp sự kiện khi Component bị hủy (Best practice trong React)
     return () => {
       window.removeEventListener("scroll", toggleVisibility);
     };
@@ -41,9 +37,9 @@ export default function ScrollToTop() {
           className="btn btn-warning shadow-lg border border-2 border-white"
           style={{
             position: "fixed",
-            bottom: "40px", // Cách đáy 40px
-            right: "40px", // Cách lề phải 40px
-            zIndex: 9999, // Nổi lên trên tất cả mọi thứ
+            bottom: "40px",
+            right: "40px",
+            zIndex: 9999,
             borderRadius: "50%",
             width: "55px",
             height: "55px",

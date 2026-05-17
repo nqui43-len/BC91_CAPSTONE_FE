@@ -1,17 +1,22 @@
-import Image from "next/image";
-import CourseList from "../components/CourseList";
-import HeroBanner from "../components/HeroBanner";
-import { HomeInfo, HomeCounter, HomeInstructors, HomeReviewer } from "@/src/components/HomeEnhancements";
+import React from "react";
+import HeroBanner from "@/src/components/HeroBanner";
+import CourseList from "@/src/components/CourseList";
+import {
+  HomeInfo,
+  HomeCounter,
+  HomeInstructors,
+  HomeReviewer,
+} from "@/src/components/HomeEnhancements";
 
-// Nằm ở file src/app/page.tsx
-export default function Home() {
+export default function HomePage() {
   return (
-    <main>
+    <main className="bg-white">
       <HeroBanner />
       <HomeInfo />
-      {/* 2. KHỐI DANH SÁCH KHÓA HỌC (Chuẩn bị sẵn khung để bước sau làm) */}
-      <section className="container mt-5 py-5">
-        <h3 className="fw-bold mb-4">Các khóa học mới nhất</h3>
+      <section className="container mt-5 py-5 text-start">
+        <h3 className="fw-bold text-dark mb-4 text-uppercase border-start border-warning border-4 ps-3">
+          Các khóa học mới nhất
+        </h3>
         <CourseList />
       </section>
       <HomeCounter />

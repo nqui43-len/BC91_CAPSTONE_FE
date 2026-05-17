@@ -2,9 +2,7 @@
 
 import React, { useEffect, useState, useRef } from "react";
 
-// ==========================================
-// 1. HIỆU ỨNG NHẢY SỐ (CÓ THÊM "MẮT THẦN" QUAN SÁT SCROLL)
-// ==========================================
+// --- ANIMATED COUNTER COMPONENT (Sử dụng Intersection Observer API để Lazy-Trigger) ---
 const AnimatedCounter = ({
   end,
   duration = 2000,
@@ -13,18 +11,18 @@ const AnimatedCounter = ({
   duration?: number;
 }) => {
   const [count, setCount] = useState(0);
-  const [hasStarted, setHasStarted] = useState(false); // Trạng thái kiểm tra đã bắt đầu đếm chưa
-  const counterRef = useRef<HTMLSpanElement>(null); // Điểm đánh dấu để quan sát
+  const [hasStarted, setHasStarted] = useState(false);
+  const counterRef = useRef<HTMLSpanElement>(null);
 
-  // Mắt thần: Canh lúc người dùng cuộn tới nơi mới cho phép bắt đầu
+  // Kích hoạt bộ đếm chỉ khi phần tử bắt đầu đi vào khung nhìn (Viewport)
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && !hasStarted) {
-          setHasStarted(true); // Kích hoạt đếm
+          setHasStarted(true);
         }
       },
-      { threshold: 0.5 }, // Khi phần tử hiện ra ít nhất 50% trên màn hình
+      { threshold: 0.5 },
     );
 
     if (counterRef.current) {
@@ -36,7 +34,7 @@ const AnimatedCounter = ({
     };
   }, [hasStarted]);
 
-  // Logic đếm số (Chỉ chạy khi hasStarted = true)
+  // Thuật toán đếm số nội suy tuyến tính dựa trên requestAnimationFrame
   useEffect(() => {
     if (!hasStarted) return;
 
@@ -55,9 +53,7 @@ const AnimatedCounter = ({
   return <span ref={counterRef}>{count}</span>;
 };
 
-// ==========================================
-// 1. KHỐI INFO (MÀU XANH / VÀNG / XÁM)
-// ==========================================
+// --- 1. FEATURES SECTION (Đặc trưng hệ thống) ---
 export function HomeInfo() {
   return (
     <section className="container py-5">
@@ -212,9 +208,7 @@ export function HomeInfo() {
   );
 }
 
-// ==========================================
-// 2. KHỐI COUNT NUMBER (ĐÃ THAY ẢNH LỖI BẰNG ICON XỊN SÒ)
-// ==========================================
+// --- 2. STATISTIC COUNTER SECTION (Thống kê số liệu) ---
 export function HomeCounter() {
   return (
     <section className="bg-light py-5 border-top border-bottom">
@@ -274,9 +268,7 @@ export function HomeCounter() {
   );
 }
 
-// ==========================================
-// 3. KHỐI INSTRUCTORS (GIẢNG VIÊN HÀNG ĐẦU)
-// ==========================================
+// --- 3. INSTRUCTORS SECTION (Đội ngũ giảng viên) ---
 export function HomeInstructors() {
   return (
     <section className="container py-5 text-start">
@@ -354,9 +346,7 @@ export function HomeInstructors() {
   );
 }
 
-// ==========================================
-// 4. KHỐI REVIEWER (Ý KIẾN HỌC VIÊN)
-// ==========================================
+// --- 4. TESTIMONIALS SECTION (Đánh giá của học viên) ---
 export function HomeReviewer() {
   return (
     <section className="container py-5 mb-5 border-top text-start">

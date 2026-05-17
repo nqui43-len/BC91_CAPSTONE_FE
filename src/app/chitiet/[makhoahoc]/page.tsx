@@ -18,10 +18,11 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [isEnrolling, setIsEnrolling] = useState(false);
 
-  // State cho Popup thu thập thông tin khách vãng lai
+  // Quản lý trạng thái Modal thu thập thông tin Lead (Khách hàng chưa có tài khoản)
   const [showLeadModal, setShowLeadModal] = useState(false);
   const [leadForm, setLeadForm] = useState({ hoTen: "", soDT: "" });
-  // Lấy mã khóa học động từ thanh URL
+
+  // Trích xuất mã khóa học (Dynamic Route Parameter) từ URL thông qua App Router Params
   const params = useParams();
   const currentCourseCode = params?.makhoahoc as string;
 
@@ -32,7 +33,7 @@ export default function CourseDetailPage() {
         const allCourses = allCoursesData?.content || allCoursesData || [];
         setRelatedCourses(allCourses.slice(0, 4));
       } catch (error) {
-        console.log("Lỗi tải khóa học:", error);
+        console.log("Lỗi tải khóa học liên quan:", error);
       } finally {
         setLoading(false);
       }
@@ -40,19 +41,20 @@ export default function CourseDetailPage() {
     fetchRelated();
   }, []);
 
+  // Kiểm tra xem khóa học hiện tại đã nằm trong danh mục ghi danh của User chưa
   const daGhiDanh = userInfo?.chiTietKhoaHocGhiDanh?.some(
     (course: any) => course.maKhoaHoc === currentCourseCode,
   );
 
-  // XỬ LÝ KHI BẤM NÚT ĐĂNG KÝ
+  // Luồng xử lý sự kiện Đăng ký khóa học (Tự động rẽ nhánh theo Auth State)
   const handleEnrollClick = async () => {
+    // 1. Trường hợp Khách hàng chưa có tài khoản: Hiển thị Modal thu thập thông tin tư vấn
     if (!isLoggedIn) {
-      // NẾU CHƯA ĐĂNG NHẬP: Bật Popup xin thông tin tư vấn
       setShowLeadModal(true);
       return;
     }
 
-    // NẾU ĐÃ ĐĂNG NHẬP: Gọi API ghi danh trực tiếp
+    // 2. Trường hợp Học viên đã Đăng nhập: Thực hiện đăng ký trực tiếp qua API
     if (!userInfo?.taiKhoan) return;
     setIsEnrolling(true);
     try {
@@ -63,7 +65,6 @@ export default function CourseDetailPage() {
       alert("🎉 Đăng ký khóa học thành công! Chúc bạn học tốt.");
       dispatch(fetchProfile());
     } catch (error: any) {
-      // Ép kiểu Object thành dạng chữ để đọc được lỗi thật sự từ Server
       const errorMsg =
         typeof error === "string" ? error : JSON.stringify(error);
       alert("❌ Lỗi ghi danh: " + errorMsg);
@@ -72,8 +73,8 @@ export default function CourseDetailPage() {
     }
   };
 
-  // XỬ LÝ GỬI FORM TƯ VẤN (KHÁCH VÃNG LAI)
-  const handleSubmitLead = (e: React.FormEvent) => {
+  // Tiếp nhận dữ liệu Lead Form từ Khách hàng
+  const handleSubmitLead = (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     alert(
       `Cảm ơn bạn ${leadForm.hoTen}! Giáo vụ CyberSoft sẽ liên hệ với bạn qua số điện thoại ${leadForm.soDT} trong thời gian sớm nhất để hỗ trợ ghi danh.`,
@@ -92,7 +93,7 @@ export default function CourseDetailPage() {
 
   return (
     <main className="bg-white pb-5" style={{ minHeight: "100vh" }}>
-      {/* 1. BANNER VÀNG */}
+      {/* --- BANNER ĐẦU TRANG --- */}
       <div className="bg-warning py-4 text-start">
         <div className="container">
           <h3
@@ -109,7 +110,7 @@ export default function CourseDetailPage() {
 
       <div className="container mt-5">
         <div className="row">
-          {/* 2. CỘT TRÁI (NỘI DUNG CHÍNH) */}
+          {/* --- CỘT TRÁI: NỘI DUNG CHI TIẾT --- */}
           <div className="col-lg-8 pe-lg-5 text-start">
             <h2
               className="fw-extrabold text-dark mb-4 text-uppercase tracking-tight"
@@ -118,7 +119,7 @@ export default function CourseDetailPage() {
               LẬP TRÌNH FRONT-END CHUYÊN NGHIỆP
             </h2>
 
-            {/* Thông số Giảng viên */}
+            {/* Khối siêu dữ liệu Giảng viên & Đánh giá */}
             <div className="row mb-4 align-items-center bg-light p-3 rounded-3 g-3">
               <div className="col-md-4 d-flex align-items-center">
                 <img
@@ -157,7 +158,6 @@ export default function CourseDetailPage() {
               </div>
             </div>
 
-            {/* Mô tả chi tiết */}
             <div
               className="text-dark lh-lg mb-5 text-justify fs-6"
               style={{ textAlign: "justify" }}
@@ -173,7 +173,7 @@ export default function CourseDetailPage() {
               tại sao khóa học này lại rất lớn!
             </div>
 
-            {/* Những gì bạn sẽ học */}
+            {/* Box cam kết chuẩn đầu ra */}
             <div className="card border-0 bg-light p-4 rounded-4 mb-5 shadow-sm">
               <h4 className="fw-bold text-dark mb-4">Những gì bạn sẽ học</h4>
               <div className="row g-3">
@@ -196,7 +196,7 @@ export default function CourseDetailPage() {
               </div>
             </div>
 
-            {/* Nội dung khóa học (Accordion) */}
+            {/* Giáo trình chi tiết khóa học */}
             <h4 className="fw-bold text-dark mb-4 text-uppercase">
               Nội dung khóa học
             </h4>
@@ -295,19 +295,19 @@ export default function CourseDetailPage() {
             </div>
           </div>
 
-          {/* 3. CỘT PHẢI (SIDEBAR ĐĂNG KÝ) */}
+          {/* --- CỘT PHẢI: SIDEBAR THANH TOÁN / ĐĂNG KÝ --- */}
           <div className="col-lg-4">
             <div
               className="card shadow-lg border-0 rounded-4 sticky-top"
               style={{ top: "110px", zIndex: 5 }}
             >
               <img
-                src="/logo.png" // Hoặc sau này đổi thành dữ liệu động: src={course.hinhAnh}
+                src="/logo.png"
                 className="card-img-top rounded-top-4"
                 alt="Front-End Course"
                 style={{ height: "230px", objectFit: "fill" }}
                 onError={(e) => {
-                  // Nếu link ảnh bị lỗi, tự động thế chỗ bằng ảnh logo mặc định của chúng ta
+                  // Fallback hình ảnh: Thay thế bằng asset cục bộ nếu URL ảnh động bị lỗi hoặc broken
                   e.currentTarget.src = "/logo.png";
                 }}
               />
@@ -320,7 +320,7 @@ export default function CourseDetailPage() {
                   500.000<sup>đ</sup>
                 </h3>
 
-                {/* NÚT ĐĂNG KÝ THÔNG MINH */}
+                {/* Hiển thị Nút Đăng ký theo trạng thái ghi danh (Conditional Rendering) */}
                 {daGhiDanh ? (
                   <button className="btn btn-secondary btn-lg fw-bold w-100 py-2.5 mb-4 rounded-3 text-uppercase disabled">
                     <i className="fa-solid fa-check-circle me-2"></i>ĐÃ GHI DANH
@@ -371,7 +371,7 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      {/* 4. KHÓA HỌC THAM KHẢO */}
+      {/* --- KHỐI ĐỀ XUẤT KHÓA HỌC LIÊN QUAN --- */}
       <div className="container mt-5 pt-5 border-top text-start">
         <h4 className="fw-bold text-dark mb-4 border-start border-warning border-4 ps-3 text-uppercase">
           Khóa học tham khảo
@@ -385,9 +385,7 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      {/* =========================================================
-          MODAL: THU THẬP THÔNG TIN KHÁCH VÃNG LAI (LEADS FORM)
-          ========================================================= */}
+      {/* --- MODAL THU THẬP THÔNG TIN --- */}
       {showLeadModal && (
         <div
           className="modal fade show d-block"

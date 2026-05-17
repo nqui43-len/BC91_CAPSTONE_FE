@@ -23,24 +23,28 @@ export default function ProfilePage() {
   });
   const [isSyncing, setIsSyncing] = useState(false);
 
+  // Kiểm tra trạng thái xác thực và phiên làm việc toàn cục (Session Validation)
   useEffect(() => {
     const token = Cookies.get("accessToken");
     if (!token) {
       router.push("/dangnhap");
     } else {
+      // Trường hợp đã có Token ở Cookie nhưng Redux State chưa kịp khởi tạo thông tin
       if (!userInfo) {
         dispatch(fetchProfile());
       }
     }
   }, [router, dispatch, userInfo]);
 
-  // HÀM ÉP ĐỒNG BỘ DỮ LIỆU TỪ BACKEND
+  // Đồng bộ hóa thủ công (Manual Re-validation) nhằm làm tươi dữ liệu tức thời từ database gốc
   const handleSyncData = async () => {
     setIsSyncing(true);
     await dispatch(fetchProfile());
-    setTimeout(() => setIsSyncing(false), 800); // Tạo hiệu ứng xoay mượt mà
+    // Tạo hiệu ứng trễ nhân tạo (Artificial UX Delay) tối ưu hóa trải nghiệm thị giác người dùng
+    setTimeout(() => setIsSyncing(false), 800);
   };
 
+  // Đổ dữ liệu tài khoản hiện có vào biểu mẫu chỉnh sửa hồ sơ cá nhân
   const handleOpenModal = () => {
     if (userInfo) {
       setEditData({
@@ -52,7 +56,8 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSubmitUpdate = async (e: React.FormEvent) => {
+  // Tiếp nhận và xử lý luồng cập nhật thông tin cá nhân của người dùng
+  const handleSubmitUpdate = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const payload = {
@@ -66,6 +71,7 @@ export default function ProfilePage() {
       };
       await userService.updateProfile(payload);
       alert("🎉 Cập nhật hồ sơ thành công!");
+
       dispatch(fetchProfile());
     } catch (error: any) {
       alert("❌ Cập nhật thất bại: " + error);
@@ -74,12 +80,11 @@ export default function ProfilePage() {
 
   if (!isLoggedIn) return null;
 
+  // Thiết lập ma trận phân quyền hệ thống dựa trên vai trò tài khoản (Role-Based Access Control - RBAC)
   const isLevel1 = userInfo?.taiKhoan === "admin_gv";
   const isLevel2 =
     userInfo?.maLoaiNguoiDung === "GV" && userInfo?.taiKhoan !== "admin_gv";
   const isLevel3 = userInfo?.maLoaiNguoiDung === "HV";
-
-  // Lấy danh sách khóa học chuẩn từ Redux (đã được bóc tách từ API gốc)
   const myCourses = userInfo?.chiTietKhoaHocGhiDanh || [];
 
   return (
@@ -88,11 +93,11 @@ export default function ProfilePage() {
       style={{ minHeight: "80vh", paddingTop: "100px" }}
     >
       <div className="container py-5">
-        <h2 className="fw-bold mb-4 border-start border-warning border-4 ps-3">
+        <h2 className="fw-bold mb-4 border-start border-warning border-4 ps-3 text-start">
           Thông tin cá nhân
         </h2>
         <div className="row">
-          {/* CỘT TRÁI */}
+          {/* Cấu trúc thẻ hiển thị tổng quan tài khoản và các hành động cốt lõi */}
           <div className="col-md-4 mb-4">
             <div className="card shadow-sm border-0 rounded-4 text-center p-4 h-100">
               <div
@@ -131,7 +136,6 @@ export default function ProfilePage() {
                 sơ
               </button>
 
-              {/* NÚT LÀM MỚI DỮ LIỆU */}
               <button
                 className="btn btn-light fw-bold w-100 rounded-pill text-muted border"
                 onClick={handleSyncData}
@@ -145,7 +149,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* CỘT PHẢI */}
+          {/* Biểu mẫu hiển thị chi tiết thông tin liên hệ và Bảng điều khiển nghiệp vụ */}
           <div className="col-md-8">
             <div className="card shadow-sm border-0 rounded-4 p-4 h-100 text-start">
               <h5 className="fw-bold mb-4 border-bottom pb-2">
@@ -179,6 +183,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {/* Mô hình hiển thị giao diện có điều kiện (Conditional Dashboard Rendering) dựa trên RBAC */}
               {isLevel1 || isLevel2 ? (
                 <>
                   <h5
@@ -191,7 +196,7 @@ export default function ProfilePage() {
                   <div className="row g-3">
                     <div className="col-md-6">
                       <div className="card h-100 border border-primary border-opacity-25 shadow-sm rounded-3 bg-white">
-                        <div className="card-body d-flex flex-column">
+                        <div className="card-body d-flex flex-column text-start">
                           <h6 className="fw-bold text-dark mb-2">
                             <i className="fa-solid fa-book-open text-primary me-2"></i>{" "}
                             Quản lý Khóa học
@@ -214,7 +219,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="col-md-6">
                       <div className="card h-100 border border-success border-opacity-25 shadow-sm rounded-3 bg-white">
-                        <div className="card-body d-flex flex-column">
+                        <div className="card-body d-flex flex-column text-start">
                           <h6 className="fw-bold text-dark mb-2">
                             <i className="fa-solid fa-users text-success me-2"></i>{" "}
                             Quản lý Người dùng
@@ -246,7 +251,7 @@ export default function ProfilePage() {
                     <i className="fa-solid fa-graduation-cap me-2"></i> Khóa học
                     đã đăng ký
                   </h5>
-                  <div className="row g-3">
+                  <div className="row g-3 text-start">
                     {loading || isSyncing ? (
                       <div className="col-12 text-center py-4">
                         <span className="spinner-border text-success"></span>
@@ -289,7 +294,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* MODAL SỬA THÔNG TIN */}
+      {/* --- CẤU TRÚC MODAL FORM CHỈNH SỬA THÔNG TIN --- */}
       <div
         className="modal fade"
         id="editProfileModal"

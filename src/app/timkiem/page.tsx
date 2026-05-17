@@ -6,8 +6,8 @@ import { courseService } from "@/src/services/courseService";
 import { Course } from "@/src/types/Course";
 import CourseCard from "@/src/components/CourseCard";
 
-// 1. ĐỔI TÊN HÀM CŨ THÀNH SearchContent
 function SearchContent() {
+  // Trích xuất tham số truy vấn (Query Parameter) từ URL thanh địa chỉ của trình duyệt
   const searchParams = useSearchParams();
   const tuKhoa = searchParams?.get("tuKhoa");
 
@@ -18,10 +18,16 @@ function SearchContent() {
     const fetchSearchResults = async () => {
       setLoading(true);
       if (tuKhoa) {
-        const data = await courseService.searchCourse(tuKhoa);
-        if (data && typeof data === "object") {
-          const courseArray = Array.isArray(data) ? data : data.content || [];
-          setCourses(courseArray);
+        try {
+          const data = await courseService.searchCourse(tuKhoa);
+
+          // Bóc tách dữ liệu an toàn (Safe Data Unwrapping): Hỗ trợ cả cấu trúc mảng thuần hoặc mảng lồng trong data.content
+          if (data && typeof data === "object") {
+            const courseArray = Array.isArray(data) ? data : data.content || [];
+            setCourses(courseArray);
+          }
+        } catch (error) {
+          console.log("Lỗi xử lý kết quả tìm kiếm khóa học:", error);
         }
       }
       setLoading(false);
@@ -44,10 +50,11 @@ function SearchContent() {
 
   return (
     <div className="container py-5">
-      <h2 className="fw-bold mb-4 border-start border-warning border-4 ps-3">
+      <h2 className="fw-bold mb-4 border-start border-warning border-4 ps-3 text-start">
         Kết quả tìm kiếm cho: <span className="text-warning">"{tuKhoa}"</span>
       </h2>
 
+      {/* Rẽ nhánh hiển thị giao diện theo số lượng phần tử tìm thấy (Conditional Rendering) */}
       {courses.length === 0 ? (
         <div className="text-center py-5">
           <i className="fa-solid fa-box-open fa-4x text-secondary mb-3"></i>
@@ -69,14 +76,16 @@ function SearchContent() {
   );
 }
 
-// 2. TẠO COMPONENT CHÍNH BỌC SUSPENSE Ở NGOÀI CÙNG
 export default function SearchPage() {
   return (
     <main
       className="bg-light"
       style={{ minHeight: "80vh", paddingTop: "100px" }}
     >
-      {/* Thẻ Suspense làm "phòng chờ" cho SearchContent */}
+      {/* Bắt buộc bọc bằng ranh giới cấu trúc <Suspense> do component con sử dụng hook useSearchParams().
+        Next.js yêu cầu cơ chế này tại thời điểm Build-time (Pre-rendering) nhằm cô lập và trì hoãn
+        quá trình bồi hoàn render phía Client (CSR Bailout) khi chưa có thông tin URL thực tế từ trình duyệt.
+      */}
       <Suspense
         fallback={
           <div className="container mt-5 py-5 text-center">

@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import userReducer from './userSlice';
 
+// --- CẤU HÌNH GLOBAL STORE (Redux Toolkit) ---
 export const store = configureStore({
   reducer: {
     user: userReducer,
