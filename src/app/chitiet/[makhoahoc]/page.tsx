@@ -302,10 +302,14 @@ export default function CourseDetailPage() {
               style={{ top: "110px", zIndex: 5 }}
             >
               <img
-                src="/logo.png"
+                src="/logo.png" // Hoặc sau này đổi thành dữ liệu động: src={course.hinhAnh}
                 className="card-img-top rounded-top-4"
                 alt="Front-End Course"
-                style={{ height: "150px", objectFit: "fill" }}
+                style={{ height: "230px", objectFit: "cover" }}
+                onError={(e) => {
+                  // Nếu link ảnh bị lỗi, tự động thế chỗ bằng ảnh logo mặc định của chúng ta
+                  e.currentTarget.src = "/logo.png";
+                }}
               />
               <div className="card-body p-4 text-start">
                 <h3
