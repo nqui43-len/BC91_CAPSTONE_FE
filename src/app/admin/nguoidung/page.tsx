@@ -14,12 +14,13 @@ export default function UserManagementPage() {
     (state: RootState) => state.user,
   );
 
+  // Quản lý dữ liệu danh sách
   const [users, setUsers] = useState<any[]>([]);
-  const [allCourses, setAllCourses] = useState<any[]>([]); // BỘ NHỚ CHỨA TOÀN BỘ KHÓA HỌC
+  const [allCourses, setAllCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // --- STATE CHO MODAL THÊM/SỬA TÀI KHOẢN ---
+  // Trạng thái Modal Thêm/Sửa Người dùng
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     taiKhoan: "",
@@ -31,17 +32,19 @@ export default function UserManagementPage() {
     maNhom: "GP01",
   });
 
-  // --- STATE CHO MODAL DUYỆT GHI DANH ---
+  // Trạng thái Modal Quản lý Ghi danh (Xét duyệt & Ép ghi danh)
   const [enrollUser, setEnrollUser] = useState<any>(null);
   const [pendingCourses, setPendingCourses] = useState<any[]>([]);
   const [approvedCourses, setApprovedCourses] = useState<any[]>([]);
   const [enrollLoading, setEnrollLoading] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState(""); // LƯU MÃ KHÓA HỌC ĐƯỢC CHỌN ĐỂ GHI DANH THỦ CÔNG
+  const [selectedCourse, setSelectedCourse] = useState("");
 
+  // Phân quyền (RBAC)
   const isLevel1 = userInfo?.taiKhoan === "admin_gv";
   const isLevel2 =
     userInfo?.maLoaiNguoiDung === "GV" && userInfo?.taiKhoan !== "admin_gv";
 
+  // Fetch dữ liệu khởi tạo
   useEffect(() => {
     if (!isLoggedIn || (!isLevel1 && !isLevel2)) {
       router.push("/");
@@ -50,15 +53,13 @@ export default function UserManagementPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Lấy danh sách người dùng
         const dataUsers = await userService.getUserList();
         setUsers(dataUsers?.content || dataUsers || []);
 
-        // Lấy toàn bộ danh sách khóa học để đổ vào Dropdown Ghi danh
         const dataCourses = await courseService.getCourseList();
         setAllCourses(dataCourses?.content || dataCourses || []);
       } catch (error) {
-        console.log(error);
+        console.log("Lỗi tải dữ liệu:", error);
       } finally {
         setLoading(false);
       }
@@ -66,9 +67,8 @@ export default function UserManagementPage() {
     fetchData();
   }, [isLoggedIn, isLevel1, isLevel2, router, refreshTrigger]);
 
-  // =====================================================================
-  // HÀM XỬ LÝ USER (THÊM/SỬA/XÓA)
-  // =====================================================================
+  // --- NGHIỆP VỤ QUẢN LÝ NGƯỜI DÙNG (CRUD) ---
+
   const handleDeleteUser = async (taiKhoan: string) => {
     if (
       window.confirm(
@@ -111,7 +111,7 @@ export default function UserManagementPage() {
     });
   };
 
-  const handleSubmitUser = async (e: React.FormEvent) => {
+  const handleSubmitUser = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       if (isEditMode) {
@@ -127,9 +127,8 @@ export default function UserManagementPage() {
     }
   };
 
-  // =====================================================================
-  // HÀM XỬ LÝ GHI DANH / XÉT DUYỆT KHÓA HỌC
-  // =====================================================================
+  // --- NGHIỆP VỤ QUẢN LÝ GHI DANH KHÓA HỌC ---
+
   const fetchUserCourses = async (taiKhoan: string) => {
     setEnrollLoading(true);
     try {
@@ -159,9 +158,10 @@ export default function UserManagementPage() {
   const handleOpenEnroll = (user: any) => {
     setEnrollUser(user);
     fetchUserCourses(user.taiKhoan);
-    setSelectedCourse(""); // Xóa khóa học chọn dở lần trước
+    setSelectedCourse("");
   };
 
+  // Duyệt yêu cầu ghi danh của học viên
   const handleApprove = async (maKhoaHoc: string) => {
     try {
       await courseService.ghiDanhKhoaHoc({
@@ -177,6 +177,7 @@ export default function UserManagementPage() {
     }
   };
 
+  // Hủy khóa học đã ghi danh hoặc từ chối yêu cầu
   const handleCancelEnroll = async (maKhoaHoc: string) => {
     if (window.confirm("Bạn có chắc muốn hủy ghi danh khóa học này?")) {
       try {
@@ -194,7 +195,7 @@ export default function UserManagementPage() {
     }
   };
 
-  // HÀM MỚI: ADMIN ÉP GHI DANH THỦ CÔNG
+  // Tính năng Admin trực tiếp gán khóa học cho học viên (Bypass quy trình duyệt)
   const handleManualEnroll = async () => {
     if (!selectedCourse) return;
     try {
@@ -203,8 +204,8 @@ export default function UserManagementPage() {
         taiKhoan: enrollUser.taiKhoan,
       });
       alert("🎉 Đã gán khóa học cho học viên thành công!");
-      fetchUserCourses(enrollUser.taiKhoan); // F5 lại bảng khóa học
-      setSelectedCourse(""); // Reset ô chọn
+      fetchUserCourses(enrollUser.taiKhoan);
+      setSelectedCourse("");
     } catch (error: any) {
       alert(
         "❌ Lỗi ghi danh: " +
@@ -227,6 +228,7 @@ export default function UserManagementPage() {
       style={{ minHeight: "100vh", paddingTop: "90px" }}
     >
       <div className="container mt-4">
+        {/* Tiêu đề & Điều hướng */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <Link
@@ -261,6 +263,7 @@ export default function UserManagementPage() {
           </button>
         </div>
 
+        {/* Bảng Danh sách Người dùng */}
         <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0">
@@ -323,6 +326,8 @@ export default function UserManagementPage() {
                       >
                         <i className="fa-solid fa-pen-to-square"></i>
                       </button>
+
+                      {/* Phân quyền nút Xóa */}
                       {isLevel1 ? (
                         <button
                           className="btn btn-sm btn-outline-danger"
@@ -348,7 +353,7 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      {/* MODAL 1: THÊM / SỬA USER (Bỏ qua vì y như cũ) */}
+      {/* --- MODAL 1: THÊM / SỬA USER --- */}
       <div
         className="modal fade"
         id="userModal"
@@ -488,7 +493,7 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      {/* MODAL 2: XÉT DUYỆT & GHI DANH THỦ CÔNG */}
+      {/* --- MODAL 2: XÉT DUYỆT & GHI DANH THỦ CÔNG --- */}
       <div
         className="modal fade"
         id="enrollModal"
@@ -518,7 +523,7 @@ export default function UserManagementPage() {
                 <span className="text-muted">({enrollUser?.taiKhoan})</span>
               </div>
 
-              {/* KHU VỰC ĐỘT PHÁ: ADMIN ÉP GHI DANH */}
+              {/* Khu vực Gán khóa học thủ công */}
               <div className="mb-4 p-3 border border-warning rounded-3 bg-warning bg-opacity-10">
                 <h6 className="fw-bold text-dark mb-3">
                   <i className="fa-solid fa-plus-circle text-warning me-2"></i>
@@ -553,7 +558,7 @@ export default function UserManagementPage() {
                 </div>
               ) : (
                 <div className="row g-4 border-top pt-3 mt-1">
-                  {/* CỘT 1: CHỜ XÁC THỰC */}
+                  {/* Cột 1: Danh sách chờ duyệt */}
                   <div className="col-md-6">
                     <h6 className="fw-bold text-danger border-bottom border-danger pb-2">
                       <i className="fa-solid fa-hourglass-half me-2"></i>Chờ xác
@@ -589,7 +594,7 @@ export default function UserManagementPage() {
                     )}
                   </div>
 
-                  {/* CỘT 2: ĐÃ GHI DANH */}
+                  {/* Cột 2: Danh sách đã ghi danh */}
                   <div className="col-md-6">
                     <h6 className="fw-bold text-success border-bottom border-success pb-2">
                       <i className="fa-solid fa-circle-check me-2"></i>Đã ghi
@@ -627,7 +632,6 @@ export default function UserManagementPage() {
                 </div>
               )}
             </div>
-
             <div className="modal-footer border-0 pt-0">
               <button
                 type="button"

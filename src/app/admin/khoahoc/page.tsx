@@ -13,12 +13,13 @@ export default function CourseManagementPage() {
     (state: RootState) => state.user,
   );
 
+  // Khởi tạo State quản lý dữ liệu
   const [courses, setCourses] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // --- STATE CHO MODAL THÊM/SỬA ---
+  // Quản lý trạng thái form Modal (Thêm/Sửa)
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({
     maKhoaHoc: "",
@@ -28,19 +29,20 @@ export default function CourseManagementPage() {
     luotXem: 0,
     danhGia: 0,
     hinhAnh: "",
-    maNhom: "GP01", // Luôn cố định theo mã nhóm của em
+    maNhom: "GP01",
     ngayTao: "",
-    maDanhMucKhoaHoc: "BackEnd", // Giá trị mặc định
+    maDanhMucKhoaHoc: "BackEnd",
     taiKhoanNguoiTao: userInfo?.taiKhoan || "",
   });
 
-  // 1. PHÂN QUYỀN
+  // --- 1. PHÂN QUYỀN (RBAC - Role Based Access Control) ---
   const isLevel1 = userInfo?.taiKhoan === "admin_gv";
   const isLevel2 =
     userInfo?.maLoaiNguoiDung === "GV" && userInfo?.taiKhoan !== "admin_gv";
 
-  // 2. TẢI DỮ LIỆU
+  // --- 2. FETCH DỮ LIỆU TỪ SERVER ---
   useEffect(() => {
+    // Chặn truy cập nếu chưa đăng nhập hoặc là Học viên (Cấp 3)
     if (!isLoggedIn || (!isLevel1 && !isLevel2)) {
       router.push("/");
       return;
@@ -49,15 +51,14 @@ export default function CourseManagementPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Lấy danh sách khóa học
         const courseData = await courseService.getCourseList();
         setCourses(courseData?.content || courseData || []);
 
-        // Lấy danh mục để đổ vào thẻ Select
+        // Fetch danh mục để cung cấp dữ liệu cho thẻ Select (Dropdown)
         const catData = await courseService.getCategoryList();
         setCategories(catData?.content || catData || []);
       } catch (error) {
-        console.log("Lỗi:", error);
+        console.log("Lỗi tải dữ liệu khóa học:", error);
       } finally {
         setLoading(false);
       }
@@ -66,9 +67,7 @@ export default function CourseManagementPage() {
     fetchData();
   }, [isLoggedIn, isLevel1, isLevel2, router, refreshTrigger]);
 
-  // =====================================================================
-  // HÀM XỬ LÝ SỰ KIỆN
-  // =====================================================================
+  // --- 3. CÁC HÀM XỬ LÝ NGHIỆP VỤ (BUSINESS LOGIC) ---
 
   const handleDeleteCourse = async (maKhoaHoc: string) => {
     if (
@@ -88,7 +87,7 @@ export default function CourseManagementPage() {
 
   const handleOpenAdd = () => {
     setIsEditMode(false);
-    // Tự động lấy ngày hôm nay theo format dd/mm/yyyy
+
     const today = new Date();
     const formattedDate = `${String(today.getDate()).padStart(2, "0")}/${String(today.getMonth() + 1).padStart(2, "0")}/${today.getFullYear()}`;
 
@@ -116,7 +115,7 @@ export default function CourseManagementPage() {
       tenKhoaHoc: course.tenKhoaHoc,
       moTa: course.moTa,
       luotXem: course.luotXem,
-      danhGia: 0, // API CyberSoft đôi khi không trả về đánh giá, set tạm 0
+      danhGia: 0, // Workaround: Set tạm 0 do API đôi khi trả về thiếu field danhGia
       hinhAnh: course.hinhAnh,
       maNhom: "GP01",
       ngayTao: course.ngayTao,
@@ -126,7 +125,9 @@ export default function CourseManagementPage() {
     });
   };
 
-  const handleSubmitCourse = async (e: React.FormEvent) => {
+  const handleSubmitCourse = async (
+    e: React.SyntheticEvent<HTMLFormElement>,
+  ) => {
     e.preventDefault();
     try {
       if (isEditMode) {
@@ -156,7 +157,7 @@ export default function CourseManagementPage() {
       style={{ minHeight: "100vh", paddingTop: "90px" }}
     >
       <div className="container mt-4">
-        {/* THANH ĐIỀU HƯỚNG */}
+        {/* --- HEADER & THANH ĐIỀU HƯỚNG --- */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <Link
@@ -192,7 +193,7 @@ export default function CourseManagementPage() {
           </button>
         </div>
 
-        {/* BẢNG DANH SÁCH */}
+        {/* --- BẢNG DANH SÁCH (DATA TABLE) --- */}
         <div className="card border-0 shadow-sm rounded-4 overflow-hidden">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0">
@@ -260,7 +261,7 @@ export default function CourseManagementPage() {
                         <i className="fa-solid fa-pen-to-square"></i>
                       </button>
 
-                      {/* KHÓA QUYỀN XÓA NẾU LÀ CẤP 2 */}
+                      {/* RBAC: Chỉ Super Admin (Cấp 1) mới có quyền xóa. Cấp 2 bị Disable */}
                       {isLevel1 ? (
                         <button
                           className="btn btn-sm btn-outline-danger"
@@ -286,9 +287,7 @@ export default function CourseManagementPage() {
         </div>
       </div>
 
-      {/* =====================================================================
-          MODAL: THÊM / SỬA KHÓA HỌC
-          ===================================================================== */}
+      {/* --- MODAL FORMS --- */}
       <div
         className="modal fade"
         id="courseModal"

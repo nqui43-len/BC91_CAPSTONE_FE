@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/src/redux/store"; // Import kiểu AppDispatch để TS không báo lỗi
-import { loginUser } from "@/src/redux/userSlice"; // Đổi thành import loginUser (Async Thunk)
+import { AppDispatch } from "@/src/redux/store";
+import { loginUser } from "@/src/redux/userSlice";
 
 export default function LoginPage() {
   const [taiKhoan, setTaiKhoan] = useState("");
@@ -13,21 +13,20 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>(); // Định kiểu cho dispatch
+  const dispatch = useDispatch<AppDispatch>();
 
-  // HÀM XỬ LÝ ĐĂNG NHẬP MỚI (Cực kỳ Gọn Gàng)
-  const handleLogin = async (e: React.FormEvent) => {
+  // Xử lý luồng đăng nhập thông qua Redux Thunk
+  const handleLogin = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
-      // Chỉ cần phát 1 lệnh duy nhất! Redux Thunk sẽ tự đi gọi API, tự cất Cookie, tự cập nhật State.
-      // Dùng .unwrap() để bắt lỗi nếu Thunk thất bại
+      // Dispatch action loginUser: Tự động gọi API, lưu Token vào Cookie và cập nhật Redux State.
+      // Sử dụng .unwrap() để đưa lỗi (exception) thẳng vào catch block nếu API reject.
       await dispatch(loginUser({ taiKhoan, matKhau })).unwrap();
 
-      // Nếu qua được dòng trên nghĩa là thành công
-      router.push("/"); // Chở về Trang chủ
+      // Đăng nhập thành công -> Điều hướng về trang chủ
+      router.push("/");
     } catch (error: any) {
-      // Nếu có lỗi, Thunk sẽ ném câu thông báo lỗi về đây
       alert(error || "Tài khoản hoặc mật khẩu không chính xác!");
     }
   };
@@ -41,7 +40,7 @@ export default function LoginPage() {
         <h2 className="text-center fw-bold mb-4">ĐĂNG NHẬP</h2>
 
         <form onSubmit={handleLogin}>
-          {/* Ô TÀI KHOẢN */}
+          {/* Trường Tài khoản */}
           <div className="mb-3">
             <label className="form-label fw-bold">Tài khoản</label>
             <input
@@ -54,7 +53,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Ô MẬT KHẨU CÓ CÔNG TẮC CON MẮT */}
+          {/* Trường Mật khẩu (Tích hợp Toggle ẩn/hiện) */}
           <div className="mb-3">
             <label className="form-label fw-bold">Mật khẩu</label>
             <div className="input-group">
@@ -70,6 +69,7 @@ export default function LoginPage() {
                 className="btn btn-outline-secondary"
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
               >
                 <i
                   className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`}
@@ -78,7 +78,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* NÚT ĐĂNG NHẬP */}
           <button type="submit" className="btn btn-warning w-100 fw-bold mt-3">
             Đăng nhập
           </button>
