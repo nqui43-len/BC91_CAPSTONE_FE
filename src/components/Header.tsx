@@ -4,78 +4,79 @@ import { courseService } from "../services/courseService";
 import { Category } from "../types/Course";
 import Link from "next/link";
 import { useRouter } from "next/dist/client/components/navigation";
-// 1. Import công cụ của Redux và Cookie
 import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/src/redux/store"; // Nhớ kiểm tra lại đường dẫn file store.ts của em nhé
-import { logout } from "@/src/redux/userSlice";
+import { AppDispatch, RootState } from "@/src/redux/store";
+import { fetchProfile, logout } from "@/src/redux/userSlice";
 import Cookies from "js-cookie";
 
 export default function Header() {
-  // Tạo 1 cái 'giỏ' rỗng để đựng danh mục
   const [categories, setCategories] = useState<Category[]>([]);
-  // 1. Tạo bộ nhớ lưu từ khóa (mặc định là rỗng)
   const [keyword, setKeyword] = useState("");
-
-  // 2. Gọi người lái xe ra chờ sẵn
   const router = useRouter();
 
-  // 3. Gọi nhân viên ngân hàng ra chờ sẵn
   const { userInfo, isLoggedIn } = useSelector(
     (state: RootState) => state.user,
   );
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
-  // 3. Hàm xử lý khi người dùng bấm nút Kính lúp hoặc gõ Enter
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault(); // Phép thuật chặn trình duyệt tự động F5 lại trang khi submit form
-
-    // Nếu người dùng có gõ chữ (không phải toàn dấu cách) thì mới cho xe chạy
+    e.preventDefault();
     if (keyword.trim() !== "") {
-      // Bảo người lái xe chở sang trang timkiem, mang theo hành lý là từ khóa
       router.push(`/timkiem?tuKhoa=${keyword}`);
     }
   };
 
-  // 3. Hàm xử lý Đăng xuất
   const handleLogout = () => {
-    // BÀI TẬP CỦA EM Ở ĐÂY:
-    // Yêu cầu 1: Báo cho Ngân hàng biết là tôi muốn đăng xuất (Gợi ý: dispatch cái hành động logout)
     dispatch(logout());
-    // Yêu cầu 2: Mở két sắt (Cookies) và vứt cái vòng tay VIP đi.
-    // Gợi ý: Dùng Cookies.remove('tên_cái_chìa_khóa_em_lưu_hôm_trước')
     Cookies.remove("accessToken");
-    // Yêu cầu 3: Bảo người lái xe chở về Trang chủ ('/')
     router.push("/");
-    // Yêu cầu 4: Báo tin vui cho người dùng biết là đã đăng xuất thành công
     alert("Đã đăng xuất thành công!");
   };
 
-  // 1. Lấy tên hiện thị và cắt chữ cái đầu tiên
   const tenHienThi = userInfo?.taiKhoan || userInfo?.hoTen || "Bạn";
-  const chuCaiDau = tenHienThi.charAt(0).toUpperCase(); // Biến 'admin' thành 'A'
+  const chuCaiDau = tenHienThi.charAt(0).toUpperCase();
 
-  // Vừa load component là chạy đi lấy data ngay
+  // KHỐI 1: BÙA PHỤC HỒI TRÍ NHỚ REDUX (Giữ nguyên)
   useEffect(() => {
-    require("bootstrap/dist/js/bootstrap.bundle.min.js");
+    const token = Cookies.get("accessToken");
+    if (token && !userInfo) {
+      dispatch(fetchProfile());
+    }
+  }, [dispatch, userInfo]);
+
+  // -------------------------------------------------------------
+  // KHỐI 2: KÍCH HOẠT BOOTSTRAP JS & LẤY DANH MỤC KHÓA HỌC
+  // -------------------------------------------------------------
+  useEffect(() => {
+    // 1. KÍCH HOẠT HIỆU ỨNG ĐỘNG (Dropdown, Modal) CỦA BOOTSTRAP TRÊN TRÌNH DUYỆT
+    import("bootstrap/dist/js/bootstrap.bundle.min.js" as any);
+
     const fetchCategories = async () => {
-      const data = await courseService.getCategoryList();
-      // Nhìn vào Swagger của em, dữ liệu thực sự nằm trong data.content
-      if (data && data.content) {
-        setCategories(data.content);
+      try {
+        const data = await courseService.getCategoryList();
+
+        // Dòng này giúp em kiểm tra xem API trả về hình dáng như thế nào ở tab Console F12
+        console.log("Dữ liệu danh mục nhận được từ API:", data);
+
+        // Bóc hộp an toàn theo cấu trúc API CyberSoft
+        const categoryArray = data?.content || data || [];
+
+        setCategories(categoryArray);
+      } catch (error) {
+        console.log("Lỗi tải danh mục:", error);
       }
     };
 
     fetchCategories();
-  }, []); // Dấu [] ở cuối nghĩa là chỉ chạy 1 lần duy nhất khi mở trang
+  }, []);
 
   return (
     <nav
       className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm py-3"
       style={{
-        backgroundColor: "rgba(255, 255, 255, 0.35)" /* Trắng hơi trong suốt */,
-        backdropFilter: "blur(10px)" /* Làm nhòe phần phía sau tấm kính */,
-        WebkitBackdropFilter:
-          "blur(10px)" /* Hỗ trợ thêm cho trình duyệt Safari của Apple */,
+        backgroundColor: "rgba(255, 255, 255, 0.35)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
       }}
     >
       <div className="container">
@@ -105,29 +106,41 @@ export default function Header() {
             {/* Dropdown Danh Mục Khóa Học */}
             <li className="nav-item dropdown">
               <a
-                className="nav-link dropdown-toggle"
+                className="nav-link dropdown-toggle fw-bold text-dark"
                 href="#"
                 id="navbarDropdown"
                 role="button"
                 data-bs-toggle="dropdown"
+                aria-expanded="false"
               >
                 Danh mục khóa học
               </a>
-              <ul className="dropdown-menu">
-                {/* Dùng vòng lặp map() để in từng danh mục ra */}
-                {categories.map((item, index) => (
-                  <li key={index}>
-                    <Link
-                      className="dropdown-item"
-                      href={`/danhmuc/${item.maDanhMuc}`}
-                    >
-                      {item.tenDanhMuc}
-                    </Link>
+              <ul
+                className="dropdown-menu shadow-sm border-0 rounded-3"
+                aria-labelledby="navbarDropdown"
+              >
+                {categories && categories.length > 0 ? (
+                  categories.map((item, index) => (
+                    <li key={index}>
+                      <Link
+                        className="dropdown-item py-2"
+                        href={`/danhmuc/${item.maDanhMuc}`}
+                      >
+                        {item.tenDanhMuc}
+                      </Link>
+                    </li>
+                  ))
+                ) : (
+                  <li>
+                    <span className="dropdown-item text-muted py-2">
+                      Đang tải danh mục...
+                    </span>
                   </li>
-                ))}
+                )}
               </ul>
             </li>
           </ul>
+
           <form
             className="input-group mx-auto"
             style={{ width: "40%" }}
@@ -138,23 +151,26 @@ export default function Header() {
               type="search"
               placeholder="Tìm khóa học..."
               aria-label="Search"
-              // Ràng buộc giá trị ô input vào "bộ nhớ"
               value={keyword}
-              // Mỗi khi gõ 1 chữ, cập nhật chữ đó vào "bộ nhớ"
               onChange={(e) => setKeyword(e.target.value)}
             />
-            <button className="btn border border-start-0 bg-whit" type="submit">
+            <button
+              className="btn border border-start-0 bg-white"
+              type="submit"
+            >
               <i className="fa-solid fa-magnifying-glass text-muted"></i>
             </button>
           </form>
-          {/* Phần UI bên phải (Khu vực Đăng nhập) */}
-          <div className="d-flex align-items-center">
-            {/* 4. Ma thuật thay đổi giao diện ở đây */}
+
+          {/* Khu vực Đăng nhập/Đăng xuất */}
+          <div className="d-flex align-items-center ms-3">
             {isLoggedIn ? (
-              // NẾU ĐÃ ĐĂNG NHẬP: Hiện tên và nút Đăng xuất
-              <div className="d-flex align-items-center gap-3" onClick={()=> router.push('/thongtin')} style={{cursor: 'pointer'}}>
-                {/* 2. Render ra giao diện (Thầy dùng Bootstrap để vo tròn và căn giữa)*/}
-                {/* Khối Avatar tròn */}
+              <div
+                className="d-flex align-items-center gap-3"
+                onClick={() => router.push("/thongtin")}
+                style={{ cursor: "pointer" }}
+                title="Vào trang Thông tin cá nhân"
+              >
                 <div
                   className="rounded-circle bg-warning text-dark d-flex justify-content-center align-items-center fw-bold shadow-sm"
                   style={{ width: "40px", height: "40px", fontSize: "1.2rem" }}
@@ -162,17 +178,19 @@ export default function Header() {
                   {chuCaiDau}
                 </div>
 
-                {/* Tên người dùng và Nút đăng xuất */}
                 <span className="fw-bold text-dark">Chào, {tenHienThi}!</span>
+
                 <button
-                  onClick={handleLogout}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLogout();
+                  }}
                   className="btn btn-outline-danger btn-sm"
                 >
                   Đăng xuất
                 </button>
               </div>
             ) : (
-              // NẾU CHƯA ĐĂNG NHẬP: Hiện nút Đăng nhập như cũ
               <Link href="/dangnhap" className="btn btn-dark">
                 Đăng nhập
               </Link>
